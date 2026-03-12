@@ -11,13 +11,11 @@ const DragonTiger = () => {
   const { bets, addBet, clearBets, totalBetAmount } = useBets();
 
   // Local state
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [isDealing, setIsDealing] = useState(false);
   const [result, setResult] = useState(null); // { dragon: { value, suit }, tiger: { value, suit }, winner }
   const [gameHistory, setGameHistory] = useState([]);
   const [selectedBet, setSelectedBet] = useState(null); // { type, value, multiplier }
-  const [betAmount, setBetAmount] = useState('100');
-  const [betMultiplier, setBetMultiplier] = useState(1);
   const [showBetSuccess, setShowBetSuccess] = useState(false);
 
   const betsRef = useRef([]);
@@ -78,7 +76,7 @@ const DragonTiger = () => {
         setResult(null);
         clearBets();
         setSelectedBet(null);
-        setTimeLeft(15);
+        setTimeLeft(30);
       }, 4000);
     }, 2000);
   }, [addWin, clearBets]);
@@ -91,15 +89,14 @@ const DragonTiger = () => {
           handleReveal();
           return 0;
         }
-        if (prev <= 0) return 0;
+        if (prev <= 0) return 30;
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
   }, [handleReveal]);
 
-  const handleBetClick = () => {
-    const amount = Number(betAmount) * betMultiplier;
+  const handleBetClick = (amount) => {
     if (!selectedBet) return;
     if (amount <= 0 || amount > balance) return;
     if (timeLeft <= 3) return;
@@ -114,8 +111,8 @@ const DragonTiger = () => {
   const isBettingDisabled = timeLeft <= 3 || isDealing;
 
   return (
-    <GameLayout title="Dragon Tiger">
-      <div className="flex flex-col gap-4 max-w-2xl mx-auto">
+    <GameLayout title="Dragon Tiger 30s" onPlaceBet={handleBetClick} betDisabled={isBettingDisabled}>
+      <div className="flex flex-col gap-4 max-w-2xl mx-auto pb-10">
         
         {/* Header Section */}
         <div className="bg-[#141A3C] rounded-2xl p-5 border border-white/5 shadow-2xl relative overflow-hidden flex justify-between items-center">
@@ -274,83 +271,7 @@ const DragonTiger = () => {
               </button>
             ))}
           </div>
-
-          {/* Bet Controls */}
-          <div className="bg-[#141A3C] rounded-3xl p-6 border border-white/5 shadow-2xl">
-            <div className="flex gap-2 mb-6">
-              {[1, 10, 100, 1000].map(val => (
-                <button
-                  key={val}
-                  onClick={() => setBetMultiplier(val)}
-                  className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${
-                    betMultiplier === val ? 'bg-casino-accent text-white shadow-lg' : 'bg-[#0B0F2A] text-gray-500 hover:text-gray-300'
-                  }`}
-                >
-                  x{val}
-                </button>
-              ))}
-            </div>
-            
-            <div className="flex gap-4">
-              <div className="flex-1 bg-[#0B0F2A] rounded-2xl px-5 flex items-center border border-white/5 shadow-inner">
-                <span className="text-gray-500 mr-2 font-black text-lg">₹</span>
-                <input
-                  type="number"
-                  value={betAmount}
-                  onChange={(e) => setBetAmount(e.target.value)}
-                  placeholder="0"
-                  className="bg-transparent w-full py-4 focus:outline-none font-black text-xl text-white"
-                />
-              </div>
-              <button
-                onClick={handleBetClick}
-                disabled={isBettingDisabled || !selectedBet || !betAmount || Number(betAmount) <= 0 || (Number(betAmount) * betMultiplier) > balance}
-                className={`px-10 rounded-2xl font-black uppercase tracking-tighter transition-all shadow-2xl ${
-                  isBettingDisabled || !selectedBet || !betAmount || Number(betAmount) <= 0 || (Number(betAmount) * betMultiplier) > balance
-                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                  : 'bg-green-600 hover:bg-green-500 text-white shadow-[0_6px_0_rgb(22,101,52)] active:translate-y-1 active:shadow-none'
-                }`}
-              >
-                Place Bet
-              </button>
-            </div>
-          </div>
         </div>
-
-        {/* Active Bets Display */}
-        <AnimatePresence>
-          {bets.length > 0 && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="bg-[#141A3C] rounded-2xl border border-white/5 shadow-xl overflow-hidden"
-            >
-              <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-green-400" />
-                  <h3 className="text-xs font-black uppercase tracking-widest">Active Bets</h3>
-                </div>
-                <div className="text-xs font-black text-white">
-                  Total: ₹{totalBetAmount}
-                </div>
-              </div>
-              <div className="p-3 grid grid-cols-2 gap-2">
-                {bets.map((bet) => (
-                  <div key={bet.id} className="flex items-center justify-between bg-[#0B0F2A] p-3 rounded-xl border border-white/5">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2.5 h-2.5 rounded-full ${
-                        bet.value === 'dragon' ? 'bg-red-500' : bet.value === 'tiger' ? 'bg-yellow-500' : 'bg-green-500'
-                      }`}></div>
-                      <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{bet.value}</span>
-                    </div>
-                    <span className="text-[10px] font-black text-green-400">₹{bet.amount}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Game History */}
         <div className="bg-[#141A3C] rounded-2xl border border-white/5 shadow-xl overflow-hidden mb-10">
@@ -396,13 +317,15 @@ const DragonTiger = () => {
         <AnimatePresence>
           {showBetSuccess && (
             <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 50, opacity: 0 }}
-              className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] bg-green-500 text-white px-8 py-4 rounded-2xl font-black uppercase text-sm shadow-2xl flex items-center gap-3 border border-green-400/20"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"
             >
-              <CheckCircle2 size={20} />
-              Bet Accepted
+              <div className="bg-green-600 px-10 py-5 rounded-2xl shadow-[0_0_50px_rgba(34,197,94,0.5)] border border-green-400 font-black text-white uppercase tracking-widest flex items-center gap-3">
+                <CheckCircle2 size={24} />
+                Bet placed successfully
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

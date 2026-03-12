@@ -7,7 +7,7 @@ const Header = () => {
   const { balance } = useWallet();
 
   return (
-    <header className="h-14 bg-casino-card border-b border-white/5 flex items-center justify-between px-4 shrink-0 shadow-lg relative z-[50]">
+    <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md h-14 bg-casino-card border-b border-x border-white/5 flex items-center justify-between px-4 shrink-0 shadow-lg z-[50]">
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 bg-casino-accent rounded-lg flex items-center justify-center shadow-lg shadow-casino-accent/20">
           <span className="text-white font-black text-xs italic">B</span>

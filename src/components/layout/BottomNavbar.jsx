@@ -11,7 +11,7 @@ const BottomNavbar = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-casino-card border-t border-gray-800 pb-safe z-50">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-casino-card border-t border-x border-white/5 pb-safe z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
       <div className="flex justify-around items-center h-16">
         {navItems.map((item) => (
           <NavLink

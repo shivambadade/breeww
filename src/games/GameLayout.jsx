@@ -5,13 +5,13 @@ import { useWallet } from '../context/WalletContext';
 import { formatINR } from '../utils/formatCurrency';
 import BetPanel from '../components/betting/BetPanel';
 
-const GameLayout = ({ title, children, onPlaceBet, betDisabled, isWide = false }) => {
+const GameLayout = ({ title, children, onPlaceBet, betDisabled, isWide = false, hideBetPanel = false }) => {
   const navigate = useNavigate();
   const { balance } = useWallet();
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex justify-center overflow-hidden">
-      <div className={`w-full ${isWide ? 'max-w-md lg:max-w-6xl' : 'max-w-md'} bg-casino-dark flex flex-col h-full relative shadow-2xl border-x border-gray-800/50`}>
+      <div className={`w-full ${isWide ? 'max-w-md lg:max-w-[1600px]' : 'max-w-md'} bg-casino-dark flex flex-col h-full relative shadow-2xl border-x border-gray-800/50`}>
         {/* Game Header */}
         <header className="h-14 bg-casino-card border-b border-gray-800 flex items-center justify-between px-4 shrink-0 shadow-lg relative z-20">
           <div className="flex items-center gap-3">
@@ -41,11 +41,13 @@ const GameLayout = ({ title, children, onPlaceBet, betDisabled, isWide = false }
         </main>
 
         {/* Reusable Bet Panel */}
-        <footer className="shrink-0 bg-casino-card border-t border-gray-800 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] z-20">
-          <div className={`${isWide ? 'max-w-6xl mx-auto w-full' : ''}`}>
-            <BetPanel onPlaceBet={onPlaceBet} disabled={betDisabled} />
-          </div>
-        </footer>
+        {!hideBetPanel && (
+          <footer className="shrink-0 bg-casino-card border-t border-gray-800 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] z-20">
+            <div className={`${isWide ? 'max-w-6xl mx-auto w-full' : ''}`}>
+              <BetPanel onPlaceBet={onPlaceBet} disabled={betDisabled} />
+            </div>
+          </footer>
+        )}
       </div>
     </div>
   );

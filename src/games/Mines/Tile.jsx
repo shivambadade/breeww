@@ -20,7 +20,7 @@ const Tile = ({ status, index, onClick, disabled }) => {
       whileTap={!disabled && status === 'hidden' ? { scale: 0.95 } : {}}
       onClick={() => onClick(index)}
       disabled={disabled || status !== 'hidden'}
-      className={`relative aspect-square rounded-full shadow-2xl border-2 transition-all duration-300 flex items-center justify-center text-4xl
+      className={`relative aspect-square rounded-full shadow-2xl border-2 transition-all duration-300 flex items-center justify-center text-5xl
         ${status === 'hidden' ? 'bg-[#141A3C] border-white/10 hover:border-indigo-500/30' : ''}
         ${status === 'safe' ? 'bg-indigo-600/20 border-indigo-400 shadow-[0_0_20px_rgba(129,140,248,0.4)]' : ''}
         ${status === 'mine' ? 'bg-red-600 border-red-400 shadow-[0_0_25px_rgba(239,68,68,0.6)]' : ''}
@@ -33,7 +33,7 @@ const Tile = ({ status, index, onClick, disabled }) => {
             key="safe"
             initial={{ opacity: 0, scale: 0, rotate: -20 }}
             animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            className="text-indigo-400 drop-shadow-[0_0_12px_rgba(129,140,248,1)] text-5xl"
+            className="text-indigo-400 drop-shadow-[0_0_12px_rgba(129,140,248,1)] text-6xl"
           >
             💎
           </motion.div>
@@ -47,7 +47,7 @@ const Tile = ({ status, index, onClick, disabled }) => {
               scale: [1, 1.5, 1],
               rotate: [0, 10, -10, 0]
             }}
-            className="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,1)] text-5xl"
+            className="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,1)] text-6xl"
           >
             💣
           </motion.div>
@@ -57,7 +57,7 @@ const Tile = ({ status, index, onClick, disabled }) => {
             key="mine-revealed"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-3xl"
+            className="text-4xl"
           >
             💣
           </motion.div>

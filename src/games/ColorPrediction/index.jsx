@@ -91,15 +91,14 @@ const ColorPrediction = () => {
           handleReveal();
           return 0;
         }
-        if (prev <= 0) return 0;
+        if (prev <= 0) return 30;
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
   }, [handleReveal]);
 
-  const handleBetClick = () => {
-    const amount = Number(betAmount) * multiplier;
+  const handleBetClick = (amount) => {
     if (!selectedBet) return;
     if (amount <= 0 || amount > balance) return;
     if (timeLeft <= 5) return;
@@ -114,7 +113,7 @@ const ColorPrediction = () => {
   const isBettingDisabled = timeLeft <= 5 || isResultRevealing;
 
   return (
-    <GameLayout title="WinGo 30s">
+    <GameLayout title="WinGo 30s" onPlaceBet={handleBetClick} betDisabled={isBettingDisabled}>
       <div className="flex flex-col gap-4">
         
         {/* Header Section */}
@@ -194,80 +193,6 @@ const ColorPrediction = () => {
           </div>
         </div>
 
-        {/* Bet Controls */}
-        <div className={`bg-casino-card rounded-2xl p-4 border border-white/5 shadow-xl transition-opacity ${isBettingDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
-          <div className="flex gap-2 mb-4">
-            {[1, 10, 100, 1000].map(val => (
-              <button
-                key={val}
-                onClick={() => setMultiplier(val)}
-                className={`flex-1 py-2 rounded-lg text-xs font-black transition-all ${
-                  multiplier === val ? 'bg-casino-accent text-white shadow-lg shadow-casino-accent/20' : 'bg-[#0B0F2A] text-gray-500'
-                }`}
-              >
-                x{val}
-              </button>
-            ))}
-          </div>
-          
-          <div className="flex gap-3">
-            <div className="flex-1 bg-[#0B0F2A] rounded-xl px-4 flex items-center border border-white/5">
-              <span className="text-gray-500 mr-2 font-bold">₹</span>
-              <input
-                type="number"
-                value={betAmount}
-                onChange={(e) => setBetAmount(e.target.value)}
-                placeholder="Enter bet amount"
-                className="bg-transparent w-full py-3 focus:outline-none font-bold text-white"
-              />
-            </div>
-            <button
-              onClick={handleBetClick}
-              disabled={isBettingDisabled || !selectedBet || !betAmount || Number(betAmount) <= 0 || (Number(betAmount) * multiplier) > balance}
-              className={`px-8 rounded-xl font-black uppercase tracking-tighter transition-all ${
-                isBettingDisabled || !selectedBet || !betAmount || Number(betAmount) <= 0 || (Number(betAmount) * multiplier) > balance
-                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-500 text-white shadow-[0_4px_0_rgb(22,101,52)] active:translate-y-1'
-              }`}
-            >
-              Bet ₹{Number(betAmount || 0) * multiplier}
-            </button>
-          </div>
-        </div>
-
-        {/* Active Bets Display */}
-        <AnimatePresence>
-          {bets.length > 0 && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="bg-casino-card rounded-2xl border border-white/5 shadow-xl overflow-hidden"
-            >
-              <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-green-400" />
-                  <h3 className="text-xs font-bold uppercase tracking-widest">Active Bets ({bets.length})</h3>
-                </div>
-                <div className="text-xs font-black text-white">
-                  Total: ₹{totalBetAmount}
-                </div>
-              </div>
-              <div className="p-2 grid grid-cols-2 gap-2">
-                {bets.map((bet) => (
-                  <div key={bet.id} className="flex items-center justify-between bg-[#0B0F2A] p-2 rounded-xl border border-white/5">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${getColorClass(bet.value)}`}></div>
-                      <span className="text-[10px] font-bold text-gray-300 uppercase">{bet.value}</span>
-                    </div>
-                    <span className="text-[10px] font-black text-green-400">₹{bet.amount}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Game History */}
         <HistoryTable gameHistory={gameHistory} />
 
@@ -302,13 +227,15 @@ const ColorPrediction = () => {
         <AnimatePresence>
           {showBetSuccess && (
             <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 50, opacity: 0 }}
-              className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] bg-green-500 text-white px-6 py-3 rounded-2xl font-bold shadow-2xl flex items-center gap-2"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"
             >
-              <CheckCircle2 size={18} />
-              Bet placed successfully
+              <div className="bg-green-600 px-10 py-5 rounded-2xl shadow-[0_0_50px_rgba(34,197,94,0.5)] border border-green-400 font-black text-white uppercase tracking-widest flex items-center gap-3">
+                <CheckCircle2 size={24} />
+                Bet placed successfully
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

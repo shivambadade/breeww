@@ -1,330 +1,349 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Info, History, TrendingUp, TrendingDown, CheckCircle2, ChevronLeft, ChevronRight, RotateCcw, Copy, ExternalLink, HelpCircle } from 'lucide-react';
+import { Wallet, Info, History, Timer, ChevronDown, ChevronUp, RotateCcw, CheckCircle2 } from 'lucide-react';
 import GameLayout from '../GameLayout';
 import { useWallet } from '../../hooks/useWallet';
 import { useBets } from '../../hooks/useBets';
 import { formatINR } from '../../utils/formatCurrency';
+
+const SUM_MULTIPLIERS = {
+  3: 207.36, 4: 69.12, 5: 34.56, 6: 20.74, 7: 13.83, 8: 9.88, 9: 8.3, 10: 7.68,
+  11: 7.68, 12: 8.3, 13: 9.88, 14: 13.83, 15: 20.74, 16: 34.56, 17: 69.12, 18: 207.36
+};
+
+const DiceIcon = ({ value, className = "" }) => {
+  const dots = [
+    [],
+    [4],
+    [0, 8],
+    [0, 4, 8],
+    [0, 2, 6, 8],
+    [0, 2, 4, 6, 8],
+    [0, 2, 3, 5, 6, 8]
+  ];
+
+  return (
+    <div className={`w-12 h-12 bg-red-600 rounded-lg shadow-lg relative p-2 ${className}`}>
+      <div className="grid grid-cols-3 grid-rows-3 gap-1 h-full w-full">
+        {[...Array(9)].map((_, i) => (
+          <div key={i} className="flex items-center justify-center">
+            {dots[value].includes(i) && (
+              <div className="w-2 h-2 bg-yellow-400 rounded-full shadow-sm" />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const Dice = () => {
   const { balance, placeBet, addWin } = useWallet();
   const { bets, addBet, clearBets, totalBetAmount } = useBets();
 
   // Local state
-  const [targetNumber, setTargetNumber] = useState(50.00);
-  const [betAmount, setBetAmount] = useState('10.00');
+  const [timeLeft, setTimeLeft] = useState(30);
   const [isRolling, setIsRolling] = useState(false);
-  const [result, setResult] = useState(null);
+  const [diceResults, setDiceResults] = useState([1, 1, 1]);
   const [gameHistory, setGameHistory] = useState([]);
+  const [betAmount, setBetAmount] = useState('10.00');
+  const [activeTab, setActiveTab] = useState('Total'); // Total, 2 same, 3 same, Different
+  const [selectedBets, setSelectedBets] = useState([]); // Array of { type, value, multiplier }
   const [showBetSuccess, setShowBetSuccess] = useState(false);
-  const [winStatus, setWinStatus] = useState(null); // 'win', 'loss'
-  const [encryptedResult, setEncryptedResult] = useState('edc86831f1e6f5cea82724493fe3a0746...');
 
-  // Stats
-  const houseEdge = 1; // 1% house edge
-  const chanceUnder = targetNumber;
-  const chanceOver = 100 - targetNumber;
-  
-  // Multipliers based on chance
-  const multiplierUnder = (99 / chanceUnder).toFixed(4);
-  const multiplierOver = (99 / chanceOver).toFixed(4);
+  const periodId = useMemo(() => {
+    const now = new Date();
+    return now.getFullYear().toString() + 
+           (now.getMonth() + 1).toString().padStart(2, '0') + 
+           now.getDate().toString().padStart(2, '0') + 
+           now.getHours().toString().padStart(2, '0') + 
+           now.getMinutes().toString().padStart(2, '0') + 
+           "0489"; // Mock suffix
+  }, [isRolling]);
 
-  const handleBet = useCallback((type) => {
-    const amount = Number(betAmount);
-    if (amount <= 0 || amount > balance) return;
-    if (isRolling) return;
-
-    const currentMultiplier = type === 'under' ? multiplierUnder : multiplierOver;
-    const currentChance = type === 'under' ? chanceUnder : chanceOver;
-
-    if (placeBet(amount)) {
-      addBet({
-        type,
-        target: targetNumber,
-        amount,
-        multiplier: currentMultiplier
-      });
-      setShowBetSuccess(true);
-      setTimeout(() => setShowBetSuccess(false), 2000);
-
-      setIsRolling(true);
-      setResult(null);
-      setWinStatus(null);
-
-      // Generate a new mock hash for each round
-      setEncryptedResult(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
-
-      // Animation duration: 1.5 seconds
-      setTimeout(() => {
-        const rollResult = (Math.random() * 100).toFixed(2);
-        setResult(parseFloat(rollResult));
-        setIsRolling(false);
-
-        // Evaluate win condition
-        const isWin = type === 'under' 
-          ? parseFloat(rollResult) < targetNumber 
-          : parseFloat(rollResult) > targetNumber;
-
-        if (isWin) {
-          const winAmount = amount * parseFloat(currentMultiplier);
-          addWin(winAmount);
-          setWinStatus('win');
-        } else {
-          setWinStatus('loss');
+  // Timer logic
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev === 1) {
+          handleReveal();
+          return 0;
         }
+        if (prev <= 0) return 30;
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-        // Add to history
-        const historyEntry = {
-          id: Date.now(),
-          result: rollResult,
-          type,
-          target: targetNumber.toFixed(2),
-          outcome: isWin ? 'Win' : 'Lose',
-          profit: isWin ? (amount * (parseFloat(currentMultiplier) - 1)).toFixed(2) : `-${amount.toFixed(2)}`
-        };
-        setGameHistory(prev => [historyEntry, ...prev].slice(0, 10));
+  const handleReveal = useCallback(() => {
+    setIsRolling(true);
+    
+    // Simulate roll animation duration
+    setTimeout(() => {
+      const newDice = [
+        Math.floor(Math.random() * 6) + 1,
+        Math.floor(Math.random() * 6) + 1,
+        Math.floor(Math.random() * 6) + 1
+      ];
+      setDiceResults(newDice);
+      const sum = newDice.reduce((a, b) => a + b, 0);
+      const isBig = sum >= 11;
+      const isEven = sum % 2 === 0;
 
-        // Cleanup after showing result
-        setTimeout(() => {
-          clearBets();
-        }, 3000);
-      }, 1500);
+      // Evaluate bets
+      let totalWon = 0;
+      bets.forEach(bet => {
+        let win = false;
+        if (bet.type === 'sum' && bet.value === sum) win = true;
+        if (bet.type === 'size' && bet.value === (isBig ? 'Big' : 'Small')) win = true;
+        if (bet.type === 'parity' && bet.value === (isEven ? 'Even' : 'Odd')) win = true;
+        
+        if (win) {
+          totalWon += bet.amount * bet.multiplier;
+        }
+      });
+
+      if (totalWon > 0) {
+        addWin(totalWon);
+      }
+
+      setGameHistory(prev => [{
+        id: Date.now(),
+        period: periodId,
+        sum,
+        results: newDice,
+        size: isBig ? 'Big' : 'Small',
+        parity: isEven ? 'Even' : 'Odd'
+      }, ...prev].slice(0, 10));
+
+      setIsRolling(false);
+      clearBets();
+      setTimeLeft(30);
+    }, 2000);
+  }, [bets, periodId, addWin, clearBets]);
+
+  const handlePlaceBet = (amount) => {
+    if (amount <= 0 || amount > balance) return;
+    if (selectedBets.length === 0) return;
+
+    selectedBets.forEach(bet => {
+      if (placeBet(amount)) {
+        addBet({
+          ...bet,
+          amount
+        });
+      }
+    });
+    setSelectedBets([]);
+    setShowBetSuccess(true);
+    setTimeout(() => setShowBetSuccess(false), 2000);
+  };
+
+  const toggleBetSelection = (type, value, multiplier) => {
+    const existingIndex = selectedBets.findIndex(b => b.type === type && b.value === value);
+    if (existingIndex > -1) {
+      setSelectedBets(prev => prev.filter((_, i) => i !== existingIndex));
+    } else {
+      setSelectedBets(prev => [...prev, { type, value, multiplier }]);
     }
-  }, [betAmount, balance, isRolling, multiplierUnder, multiplierOver, chanceUnder, chanceOver, targetNumber, placeBet, addBet, addWin, clearBets]);
+  };
 
   return (
-    <GameLayout title="DICE">
-      <div className="flex flex-col gap-4 max-w-4xl mx-auto pb-10">
+    <GameLayout title="DICE" isWide={false} onPlaceBet={handlePlaceBet} betDisabled={timeLeft <= 5 || isRolling}>
+      <div className="flex flex-col gap-4 max-w-md mx-auto pb-10">
         
-        {/* Top bar like screenshot */}
-        <div className="flex justify-between items-center bg-[#0B0F2A]/80 p-3 rounded-xl border border-white/5 mb-2">
-          <div className="flex items-center gap-4">
-             <div className="flex items-center gap-1.5 text-orange-500 font-bold text-xs bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20">
-                <HelpCircle size={14} />
-                How to Play?
-             </div>
-          </div>
-          <div className="flex items-center gap-3">
-             <div className="text-white font-black text-sm">{formatINR(balance)}</div>
-             <div className="bg-[#141A3C] p-1.5 rounded-lg border border-white/10">
-                <TrendingUp size={14} className="text-gray-400" />
-             </div>
-          </div>
-        </div>
-
-        {/* Dice Board Section */}
+        {/* Game Board */}
         <div className="bg-[#141A3C] rounded-3xl p-6 border border-white/5 shadow-2xl relative overflow-hidden flex flex-col items-center">
-          
-          {/* Encrypted Result Mock */}
-          <div className="flex items-center gap-2 mb-8 bg-black/20 px-4 py-2 rounded-xl border border-white/5">
-            <span className="text-[10px] text-gray-400 font-bold">Encrypted Result:</span>
-            <span className="text-[10px] text-gray-500 font-mono truncate max-w-[200px]">{encryptedResult}</span>
-            <Copy size={12} className="text-gray-500 cursor-pointer hover:text-white" />
-            <RotateCcw size={12} className="text-gray-500 cursor-pointer hover:text-white" />
-          </div>
-
-          {/* Main Number Display */}
-          <div className="text-7xl font-black text-white mb-10 tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-            {isRolling ? (
-               <motion.span
-                 animate={{ opacity: [1, 0.5, 1] }}
-                 transition={{ duration: 0.1, repeat: Infinity }}
-               >
-                 {(Math.random() * 100).toFixed(2)}
-               </motion.span>
-            ) : result !== null ? result.toFixed(2) : targetNumber.toFixed(2)}
-          </div>
-
-          {/* Custom Track (Dual Bar style) */}
-          <div className="w-full relative px-4 mb-12">
-            
-            {/* Top Bar (Roll Over Visualization) */}
-            <div className="h-6 w-full flex rounded-sm overflow-hidden mb-1 border border-black/40">
-               <div className="bg-red-600/80 h-full transition-all duration-300" style={{ width: `${targetNumber}%` }}></div>
-               <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${100 - targetNumber}%` }}></div>
+          <div className="flex justify-between w-full mb-6">
+            <div className="flex flex-col">
+              <span className="text-gray-500 text-[10px] font-bold uppercase">Period</span>
+              <span className="text-white font-black text-sm">{periodId}</span>
             </div>
-
-            {/* Bottom Bar (Roll Under Visualization) */}
-            <div className="h-6 w-full flex rounded-sm overflow-hidden border border-black/40">
-               <div className="bg-green-500 h-full transition-all duration-300" style={{ width: `${targetNumber}%` }}></div>
-               <div className="bg-red-600/80 h-full transition-all duration-300" style={{ width: `${100 - targetNumber}%` }}></div>
-            </div>
-
-            {/* Scale/Ticks */}
-            <div className="flex justify-between mt-1 text-[10px] font-bold text-gray-500/50 uppercase">
-              <span>0</span>
-              <span>25</span>
-              <span>50</span>
-              <span>75</span>
-              <span>100</span>
-            </div>
-
-            {/* Slider Handle (Yellow Dot) */}
-            <div 
-              className="absolute left-4 right-4 h-12 top-0 pointer-events-none"
-            >
-               <motion.div 
-                 animate={{ left: `${targetNumber}%` }}
-                 className="absolute -top-1 -translate-x-1/2 w-8 h-14 flex items-center justify-center pointer-events-auto cursor-pointer group"
-               >
-                  <div className="w-5 h-5 bg-[#FFD700] rounded-full border-4 border-[#141A3C] shadow-[0_0_15px_rgba(255,215,0,0.5)] group-hover:scale-110 transition-transform flex items-center justify-center">
-                     <div className="w-1 h-1 bg-black rounded-full"></div>
+            <div className="flex flex-col items-end">
+              <span className="text-gray-500 text-[10px] font-bold uppercase">Time remaining</span>
+              <div className="flex gap-1">
+                {[0, 0].map((n, i) => (
+                  <div key={i} className="bg-white/5 px-2 py-1 rounded text-white font-black text-xl">
+                    {n}
                   </div>
-               </motion.div>
+                ))}
+                <span className="text-white font-black text-xl mx-1">:</span>
+                {[Math.floor(timeLeft / 10), timeLeft % 10].map((n, i) => (
+                  <div key={i} className="bg-white/5 px-2 py-1 rounded text-white font-black text-xl">
+                    {n}
+                  </div>
+                ))}
+              </div>
             </div>
-
-            {/* Transparent input for slider control */}
-            <input 
-              type="range" 
-              min="0" 
-              max="100" 
-              step="0.01"
-              value={targetNumber}
-              onChange={(e) => setTargetNumber(parseFloat(e.target.value))}
-              disabled={isRolling}
-              className="absolute inset-0 opacity-0 cursor-pointer z-10"
-            />
           </div>
 
-          {/* Payout/Potential Win/Chance panel */}
-          <div className="w-full bg-black/30 p-4 rounded-2xl border border-white/5 flex items-center justify-between">
-             <div className="flex flex-col items-center flex-1">
-                <span className="text-[10px] font-bold text-gray-500 uppercase mb-1">Payout</span>
-                <div className="bg-[#0B0F2A] px-6 py-2 rounded-xl text-sm font-black text-white border border-white/5">
-                   {multiplierUnder}x
-                </div>
-             </div>
-             
-             {/* Visual Divider/Slider Element (Mock) */}
-             <div className="h-8 w-px bg-white/10 mx-4"></div>
-
-             <div className="flex flex-col items-center flex-1">
-                <span className="text-[10px] font-bold text-gray-500 uppercase mb-1">Potential win:</span>
-                <div className="text-sm font-black text-white">
-                   {(Number(betAmount) * multiplierUnder).toFixed(2)} INI
-                </div>
-             </div>
-
-             <div className="flex flex-col items-center flex-1">
-                <span className="text-[10px] font-bold text-gray-500 uppercase mb-1">Chance:</span>
-                <div className="text-sm font-black text-white">
-                   {chanceUnder.toFixed(1)}%
-                </div>
-             </div>
+          <div className="bg-green-900/40 rounded-3xl p-8 border-4 border-green-600/50 shadow-inner flex gap-6 relative">
+            {/* Slot-like frame */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/20 pointer-events-none" />
+            <div className="flex items-center gap-4">
+              <AnimatePresence mode="wait">
+                {diceResults.map((val, i) => (
+                  <motion.div
+                    key={`${i}-${val}-${isRolling}`}
+                    initial={isRolling ? { y: -20, opacity: 0 } : { y: 0, opacity: 1 }}
+                    animate={isRolling ? { 
+                      y: [0, -50, 50, 0], 
+                      rotate: [0, 90, 180, 270, 360],
+                      opacity: 1
+                    } : { y: 0, opacity: 1 }}
+                    transition={isRolling ? { 
+                      duration: 0.2, 
+                      repeat: Infinity, 
+                      ease: "linear" 
+                    } : { duration: 0.5, type: 'spring' }}
+                  >
+                    <DiceIcon value={isRolling ? Math.floor(Math.random() * 6) + 1 : val} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
 
-        {/* Betting Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
-          
-          {/* Bet Amount Input */}
-          <div className="md:col-span-2 bg-[#141A3C] p-2 rounded-2xl border border-white/5 flex items-center gap-2">
-             <div className="bg-[#0B0F2A] px-4 py-2 rounded-xl text-[10px] font-black text-gray-500 uppercase">Bet</div>
-             <input
-               type="text"
-               value={betAmount}
-               onChange={(e) => setBetAmount(e.target.value)}
-               className="bg-transparent flex-1 py-3 text-lg font-black text-white focus:outline-none"
-             />
-             <div className="flex gap-1 pr-2">
-                <button 
-                  onClick={() => setBetAmount((prev) => (Math.max(0, parseFloat(prev) - 10)).toFixed(2))}
-                  className="w-8 h-8 rounded-lg bg-[#0B0F2A] flex items-center justify-center text-gray-400 hover:text-white border border-white/5"
-                >
-                  -
-                </button>
-                <div className="w-8 h-8 rounded-lg bg-[#0B0F2A] flex items-center justify-center text-gray-400">
-                   <RotateCcw size={14} />
-                </div>
-                <button 
-                  onClick={() => setBetAmount((prev) => (parseFloat(prev) + 10).toFixed(2))}
-                  className="w-8 h-8 rounded-lg bg-[#0B0F2A] flex items-center justify-center text-gray-400 hover:text-white border border-white/5"
-                >
-                  +
-                </button>
-             </div>
+        {/* Betting Panel */}
+        <div className="bg-[#141A3C] rounded-3xl border border-white/5 shadow-2xl overflow-hidden">
+          <div className="flex border-b border-white/5">
+            {['Total', '2 same', '3 same', 'Different'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-4 text-xs font-black uppercase transition-all ${
+                  activeTab === tab ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-white/5'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 md:col-span-2">
-             <button 
-               className="h-14 w-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-lg active:scale-95"
-               onClick={() => setTargetNumber(50)}
-             >
-                <RotateCcw size={20} />
-             </button>
-             
-             {/* Roll Under Button */}
-             <button
-               onClick={() => handleBet('under')}
-               disabled={isRolling || !betAmount || Number(betAmount) <= 0 || Number(betAmount) > balance}
-               className={`flex-1 h-14 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 relative overflow-hidden group ${
-                 isRolling ? 'opacity-50 grayscale' : 'bg-gradient-to-b from-[#00D1B2] to-[#00A38B] hover:shadow-[0_0_20px_rgba(0,209,178,0.3)] shadow-[0_4px_0_#007D6B]'
-               }`}
-             >
-                <TrendingDown size={18} className="text-white mb-0.5" />
-                <span className="text-sm font-black text-white leading-none">{targetNumber.toFixed(1)}</span>
-             </button>
+          <div className="p-6">
+            {activeTab === 'Total' && (
+              <div className="flex flex-col gap-6">
+                {/* Numbers Grid */}
+                <div className="grid grid-cols-4 gap-4">
+                  {Object.entries(SUM_MULTIPLIERS).map(([sum, mult]) => (
+                    <button
+                      key={sum}
+                      onClick={() => toggleBetSelection('sum', parseInt(sum), mult)}
+                      className={`relative flex flex-col items-center p-3 rounded-2xl transition-all border-2 ${
+                        selectedBets.find(b => b.type === 'sum' && b.value === parseInt(sum))
+                          ? 'bg-red-600 border-red-400 shadow-lg shadow-red-600/30'
+                          : 'bg-[#0B0F2A] border-white/5 hover:border-white/20'
+                      }`}
+                    >
+                      <span className="text-[10px] text-gray-500 font-bold mb-1">{mult}X</span>
+                      <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-black ${
+                        parseInt(sum) % 2 === 0 ? 'border-green-500 text-green-500' : 'border-red-500 text-red-500'
+                      }`}>
+                        {sum}
+                      </div>
+                    </button>
+                  ))}
+                </div>
 
-             {/* Roll Over Button */}
-             <button
-               onClick={() => handleBet('over')}
-               disabled={isRolling || !betAmount || Number(betAmount) <= 0 || Number(betAmount) > balance}
-               className={`flex-1 h-14 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 relative overflow-hidden group ${
-                 isRolling ? 'opacity-50 grayscale' : 'bg-gradient-to-b from-[#0094FF] to-[#0075CC] hover:shadow-[0_0_20px_rgba(0,148,255,0.3)] shadow-[0_4px_0_#005999]'
-               }`}
-             >
-                <TrendingUp size={18} className="text-white mb-0.5" />
-                <span className="text-sm font-black text-white leading-none">{(100 - targetNumber).toFixed(1)}</span>
-             </button>
+                {/* Big/Small Grid */}
+                <div className="grid grid-cols-4 gap-3">
+                  {[
+                    { label: 'Small', val: 'Small', color: 'bg-blue-500' },
+                    { label: 'Big', val: 'Big', color: 'bg-orange-500' },
+                    { label: 'Even', val: 'Even', color: 'bg-green-500' },
+                    { label: 'Odd', val: 'Odd', color: 'bg-red-500' }
+                  ].map((b) => (
+                    <button
+                      key={b.label}
+                      onClick={() => toggleBetSelection(b.val === 'Big' || b.val === 'Small' ? 'size' : 'parity', b.val, 2)}
+                      className={`py-4 rounded-xl flex flex-col items-center transition-all border-2 ${
+                        selectedBets.find(sb => sb.value === b.val)
+                          ? `${b.color} border-white shadow-lg`
+                          : `${b.color}/20 border-transparent text-white/80 hover:border-white/10`
+                      }`}
+                    >
+                      <span className="text-sm font-black uppercase">{b.label}</span>
+                      <span className="text-[10px] font-bold opacity-60">2X</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {activeTab !== 'Total' && (
+              <div className="py-10 text-center text-gray-500 font-bold uppercase tracking-widest italic">
+                Coming Soon in next update
+              </div>
+            )}
           </div>
         </div>
 
-        {/* History Table */}
-        <div className="bg-[#141A3C] rounded-2xl border border-white/5 shadow-xl overflow-hidden mt-6">
-          <div className="p-4 border-b border-white/5 flex items-center gap-2 bg-white/5">
-            <History size={16} className="text-casino-accent" />
-            <h3 className="text-xs font-bold uppercase tracking-widest">Recent Activity</h3>
+        {/* History Section */}
+        <div className="bg-[#141A3C] rounded-3xl border border-white/5 shadow-xl overflow-hidden mb-10">
+          <div className="flex bg-[#0B0F2A] p-1 m-4 rounded-xl border border-white/5">
+            {['Game history', 'Chart', 'My history'].map((tab, i) => (
+              <button key={tab} className={`flex-1 py-2 rounded-lg text-xs font-black uppercase transition-all ${i === 0 ? 'bg-orange-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>
+                {tab}
+              </button>
+            ))}
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-[10px]">
               <thead>
-                <tr className="text-left text-[10px] font-black text-gray-500 uppercase tracking-widest bg-black/20">
-                  <th className="px-4 py-3">Result</th>
-                  <th className="px-4 py-3">Bet Type</th>
-                  <th className="px-4 py-3">Target</th>
-                  <th className="px-4 py-3">Profit</th>
-                  <th className="px-4 py-3 text-right">Time</th>
+                <tr className="bg-orange-900/20 text-orange-500 font-black uppercase tracking-widest">
+                  <th className="px-4 py-3 text-left">Period</th>
+                  <th className="px-4 py-3 text-center">Sum</th>
+                  <th className="px-4 py-3 text-right">Results</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {gameHistory.length > 0 ? (
                   gameHistory.map((h) => (
-                    <tr key={h.id} className="text-xs font-bold text-gray-300 hover:bg-white/5 transition-colors">
-                      <td className="px-4 py-3 text-white font-black">{h.result}</td>
-                      <td className="px-4 py-3 uppercase">
-                        <span className={h.type === 'under' ? 'text-green-500' : 'text-blue-500'}>{h.type}</span>
+                    <tr key={h.id} className="text-gray-300 font-bold hover:bg-white/5 transition-colors">
+                      <td className="px-4 py-3">{h.period}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-white font-black mr-2">{h.sum}</span>
+                        <span className="text-[8px] opacity-60 uppercase">{h.size} | {h.parity}</span>
                       </td>
-                      <td className="px-4 py-3">{h.target}</td>
-                      <td className={`px-4 py-3 ${h.outcome === 'Win' ? 'text-green-500' : 'text-red-500'}`}>
-                        {h.profit} INI
-                      </td>
-                      <td className="px-4 py-3 text-right text-gray-500 text-[10px]">
-                        {new Date(h.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-1">
+                          {h.results.map((val, i) => (
+                            <div key={i} className="w-4 h-4 bg-red-600 rounded-sm flex items-center justify-center">
+                              <div className="w-0.5 h-0.5 bg-yellow-400 rounded-full" />
+                            </div>
+                          ))}
+                        </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="px-4 py-12 text-center text-gray-600 italic">
-                      Start rolling to see your history
-                    </td>
+                    <td colSpan="3" className="px-4 py-12 text-center text-gray-600 italic">No history yet</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
+
+        {/* Bet Success Toast */}
+        <AnimatePresence>
+          {showBetSuccess && (
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"
+            >
+              <div className="bg-green-600 px-10 py-5 rounded-2xl shadow-[0_0_50px_rgba(34,197,94,0.5)] border border-green-400 font-black text-white uppercase tracking-widest flex items-center gap-3">
+                <CheckCircle2 size={24} />
+                Bet placed successfully
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
     </GameLayout>

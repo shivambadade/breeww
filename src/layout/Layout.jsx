@@ -5,12 +5,14 @@ import BottomNavbar from '../components/layout/BottomNavbar';
 
 const Layout = () => {
   return (
-    <div className="min-h-screen bg-casino-dark text-white pb-20">
-      <Header />
-      <main className="container mx-auto px-4 pt-4">
-        <Outlet />
-      </main>
-      <BottomNavbar />
+    <div className="min-h-screen bg-casino-dark flex justify-center">
+      <div className="w-full max-w-md bg-casino-dark text-white relative shadow-2xl border-x border-white/5 flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1 px-4 pt-16 pb-24 overflow-y-auto custom-scrollbar">
+          <Outlet />
+        </main>
+        <BottomNavbar />
+      </div>
     </div>
   );
 };
