@@ -1,12 +1,10 @@
 import React from 'react';
 import Tile from './Tile';
 
-const MineGrid = ({ tiles, onTileClick, gameStatus, mines }) => {
-  // tiles: array of 25 strings ('hidden', 'safe', 'mine', 'mine-revealed')
-
+const MineGrid = ({ tiles, onTileClick, gameStatus }) => {
   return (
-    <div className="w-full max-w-[800px] mx-auto mb-8 p-6 md:p-12 bg-black/20 rounded-[3rem] shadow-2xl border border-white/5 backdrop-blur-sm">
-      <div className="grid grid-cols-5 gap-3 md:gap-5">
+    <div className="mx-auto w-full max-w-[480px] p-2 rounded-2xl bg-gradient-to-br from-[#0b3c94] to-[#174bb5] border border-blue-400/20 shadow-2xl">
+      <div className="grid grid-cols-5 gap-2 p-2">
         {tiles.map((status, index) => (
           <Tile
             key={index}

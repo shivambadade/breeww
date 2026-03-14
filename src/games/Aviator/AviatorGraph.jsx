@@ -1,76 +1,82 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 
 const AviatorGraph = ({ multiplier, gameState }) => {
   // SVG size constants
   const width = 800;
   const height = 400;
-  const paddingX = 20;
-  const paddingY = 20;
+  const paddingX = 40;
+  const paddingY = 40;
 
   // Calculate coordinates based on current multiplier
   // The curve should grow as the multiplier increases
   const progress = Math.min((multiplier - 1) / 5, 1); 
   
-  // Curved path: Starting from bottom-left (startX=0, startY=height)
-  const startX = 0;
-  const startY = height;
-  const endX = (width * 0.9) * progress + paddingX;
-  const endY = height - (height * 0.8) * progress - paddingY;
+  // Curved path: Starting from bottom-left
+  const startX = paddingX;
+  const startY = height - paddingY;
+  const endX = (width - paddingX * 2) * progress + paddingX;
+  const endY = (height - paddingY * 2) * (1 - progress) + paddingY;
   
-  // Control point for curve (makes it curve upwards from bottom left)
-  const cpX = endX * 0.8;
-  const cpY = height;
+  // Control point for curve
+  const cpX = endX * 0.6 + startX * 0.4;
+  const cpY = startY;
 
   const pathData = `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`;
 
   return (
-    <div className="relative w-full h-[300px] md:h-[400px] bg-[#000000] rounded-xl overflow-hidden shadow-inner border border-white/5">
+    <div className="relative w-full h-full bg-[#000000] overflow-hidden flex flex-col">
+      {/* Top Bar with Round ID */}
+      <div className="absolute top-0 left-0 w-full p-3 flex items-center justify-between z-20">
+        <div className="flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-md border border-white/5">
+          <span className="text-[10px] text-gray-500 font-bold uppercase">Round ID:</span>
+          <span className="text-[10px] text-gray-300 font-bold tabular-nums">18039292</span>
+          <ChevronDown size={12} className="text-gray-500" />
+        </div>
+        <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-md border border-white/5">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                <span className="text-[10px] text-gray-300 font-bold uppercase tracking-widest">Ping: 182ms</span>
+            </div>
+        </div>
+      </div>
+
       {/* Grid Lines */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
-        <div className="h-full w-full" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '50px 50px' }}></div>
+        <div className="h-full w-full" style={{ 
+            backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', 
+            backgroundSize: '60px 60px',
+            backgroundPosition: `${paddingX}px ${startY}px`
+        }}></div>
       </div>
 
       {/* Background Radial Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_#991b1b44_0%,_transparent_60%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.03)_0%,_transparent_70%)]" />
+
+      {/* Multiplier Axes Labels */}
+      <div className="absolute left-2 top-0 h-full flex flex-col justify-between py-10 opacity-30 pointer-events-none">
+        {[5, 4, 3, 2, 1].map(n => (
+            <div key={n} className="w-1 h-1 bg-blue-400 rounded-full" />
+        ))}
+      </div>
+      <div className="absolute bottom-2 left-0 w-full flex justify-between px-10 opacity-30 pointer-events-none">
+        {[0, 1, 2, 3, 4, 5, 6, 7].map(n => (
+            <div key={n} className="w-1 h-1 bg-white rounded-full" />
+        ))}
+      </div>
 
       {/* SVG Canvas */}
       <svg viewBox={`0 0 ${width} ${height}`} className="absolute inset-0 w-full h-full">
-        <defs>
-          <linearGradient id="curveGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#991b1b" stopOpacity="0.1" />
-            <stop offset="100%" stopColor="#ef4444" stopOpacity="0.8" />
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* The Curve Path */}
-        {gameState === 'running' && (
-          <motion.path
-            d={pathData}
-            fill="none"
-            stroke="url(#curveGradient)"
-            strokeWidth="5"
-            strokeLinecap="round"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 0.1 }}
-            filter="url(#glow)"
-          />
-        )}
-
-        {/* Fill under the curve */}
+        {/* The Curve Path (Trailing Line) */}
         {gameState === 'running' && (
           <path
-            d={`${pathData} L ${endX} ${startY} L ${startX} ${startY} Z`}
-            fill="url(#curveGradient)"
-            opacity="0.2"
+            d={pathData}
+            fill="none"
+            stroke="#ff0000"
+            strokeWidth="3"
+            strokeLinecap="round"
+            opacity="0.8"
           />
         )}
 
@@ -78,32 +84,31 @@ const AviatorGraph = ({ multiplier, gameState }) => {
         <AnimatePresence>
           {gameState === 'running' && (
             <motion.g
-              initial={{ x: startX, y: startY, rotate: -15, opacity: 0 }}
-              animate={{ x: endX, y: endY, rotate: -20, opacity: 1 }}
+              initial={{ x: startX, y: startY, rotate: 0, opacity: 0 }}
+              animate={{ x: endX, y: endY, rotate: -5, opacity: 1 }}
               transition={{ duration: 0.1 }}
-              className="drop-shadow-[0_0_15px_rgba(239,68,68,0.9)]"
             >
-              {/* Refined Red Aviator Airplane Body */}
-              <path 
-                d="M-25,0 L15,0 L35,-10 L45,0 L35,10 L15,0 Z M8,0 L-12,-22 L8,-22 L18,0 Z M8,0 L-12,22 L8,22 L18,0 Z" 
-                fill="#ff0000" 
-                stroke="#fff" 
-                strokeWidth="1.5"
-              />
-              {/* Tail Fin */}
-              <path d="M-25,-2 L-32,-15 L-20,-15 L-12,-2 Z" fill="#ff0000" stroke="#fff" strokeWidth="1" />
-              <path d="M-25,2 L-32,15 L-20,15 L-12,2 Z" fill="#ff0000" stroke="#fff" strokeWidth="1" />
-              
-              {/* High Speed Propeller Animation */}
-              <motion.g
-                animate={{ rotate: 360 }}
-                transition={{ duration: 0.05, repeat: Infinity, ease: "linear" }}
-                style={{ originX: "47px", originY: "0px" }}
-              >
-                <circle cx="47" cy="0" r="12" fill="none" stroke="white" strokeWidth="1.5" strokeDasharray="4,8" opacity="0.6" />
-                <path d="M47,-12 L47,12" stroke="white" strokeWidth="2" opacity="0.4" />
-                <path d="M35,0 L59,0" stroke="white" strokeWidth="2" opacity="0.4" />
-              </motion.g>
+              {/* Detailed Red Airplane */}
+              <g transform="translate(-20, -10) scale(0.8)">
+                {/* Main Body */}
+                <path 
+                  d="M0,10 L30,10 L50,0 L60,10 L50,20 L30,10 Z" 
+                  fill="#ff0000" 
+                />
+                {/* Wings */}
+                <path d="M25,10 L10,-15 L30,-15 L40,10 Z" fill="#ff0000" />
+                <path d="M25,10 L10,35 L30,35 L40,10 Z" fill="#ff0000" />
+                {/* Propeller Hub */}
+                <circle cx="60" cy="10" r="3" fill="#ff0000" />
+                {/* Propeller Blade Animation */}
+                <motion.line 
+                    x1="60" y1="-5" x2="60" y2="25" 
+                    stroke="#ffffff" strokeWidth="2" opacity="0.6"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.1, repeat: Infinity, ease: "linear" }}
+                    style={{ originX: "60px", originY: "10px" }}
+                />
+              </g>
             </motion.g>
           )}
         </AnimatePresence>
@@ -120,10 +125,8 @@ const AviatorGraph = ({ multiplier, gameState }) => {
               exit={{ opacity: 0, scale: 1.2 }}
               className="text-center"
             >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
-              </div>
-              <div className="text-gray-400 font-bold uppercase tracking-widest text-sm">Waiting for next round</div>
+              <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <div className="text-gray-400 font-black uppercase tracking-[0.2em] text-sm">Waiting for next round</div>
             </motion.div>
           ) : gameState === 'crashed' ? (
             <motion.div
@@ -132,10 +135,10 @@ const AviatorGraph = ({ multiplier, gameState }) => {
               animate={{ opacity: 1, scale: 1 }}
               className="text-center"
             >
-              <div className="text-red-600 font-black italic text-5xl md:text-7xl tracking-tighter drop-shadow-lg">
+              <div className="text-red-600 font-black italic text-6xl md:text-8xl tracking-tighter mb-2">
                 FLEW AWAY!
               </div>
-              <div className="text-white font-black text-4xl md:text-6xl mt-2 drop-shadow-md">
+              <div className="text-white font-black text-5xl md:text-7xl tabular-nums">
                 {multiplier.toFixed(2)}x
               </div>
             </motion.div>
@@ -146,16 +149,13 @@ const AviatorGraph = ({ multiplier, gameState }) => {
               animate={{ opacity: 1 }}
               className="text-center"
             >
-              <div className="text-white font-black italic text-6xl md:text-8xl tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] tabular-nums">
+              <div className="text-white font-black text-[100px] md:text-[140px] leading-none tracking-tighter drop-shadow-2xl tabular-nums">
                 {multiplier.toFixed(2)}x
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-
-      {/* Decorative Bottom Bar */}
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-red-600/50 via-red-600 to-red-600/50" />
     </div>
   );
 };

@@ -15,10 +15,10 @@ const PlinkoControls = ({
   const riskOptions = ['low', 'medium', 'high'];
 
   return (
-    <div className="bg-[#141A3C]/50 backdrop-blur-md p-6 rounded-3xl shadow-2xl border border-white/5 space-y-6">
+    <div className="bg-[#1c1c1e] p-6 rounded-3xl shadow-2xl border border-white/5 space-y-6">
       {/* Risk Selector */}
       <div className="space-y-2">
-        <label className="text-xs font-black text-gray-500 uppercase tracking-widest block ml-1">
+        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block ml-1">
           Risk Level
         </label>
         <div className="grid grid-cols-3 gap-2">
@@ -26,10 +26,10 @@ const PlinkoControls = ({
             <button
               key={option}
               onClick={() => setRisk(option)}
-              className={`py-2.5 rounded-xl text-xs font-black transition-all border uppercase
+              className={`py-2 rounded-xl text-[10px] font-black transition-all border uppercase
                 ${risk === option
-                  ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg'
-                  : 'bg-[#0B0F2A] border-white/5 text-gray-400 hover:text-gray-200'
+                  ? 'bg-pink-600 border-pink-400 text-white shadow-lg shadow-pink-600/20'
+                  : 'bg-[#242E4D] border-white/5 text-gray-400 hover:text-gray-200'
                 }
               `}
             >
@@ -41,7 +41,7 @@ const PlinkoControls = ({
 
       {/* Rows Selector */}
       <div className="space-y-2">
-        <label className="text-xs font-black text-gray-500 uppercase tracking-widest block ml-1">
+        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block ml-1">
           Rows
         </label>
         <div className="grid grid-cols-5 gap-2">
@@ -49,10 +49,10 @@ const PlinkoControls = ({
             <button
               key={row}
               onClick={() => setRows(row)}
-              className={`py-2.5 rounded-xl text-xs font-black transition-all border
+              className={`py-2 rounded-xl text-[10px] font-black transition-all border
                 ${rows === row
-                  ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg'
-                  : 'bg-[#0B0F2A] border-white/5 text-gray-400 hover:text-gray-200'
+                  ? 'bg-pink-600 border-pink-400 text-white shadow-lg shadow-pink-600/20'
+                  : 'bg-[#242E4D] border-white/5 text-gray-400 hover:text-gray-200'
                 }
               `}
             >
@@ -64,10 +64,10 @@ const PlinkoControls = ({
 
       {/* Bet Amount */}
       <div className="space-y-2">
-        <label className="text-xs font-black text-gray-500 uppercase tracking-widest block ml-1">
+        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block ml-1">
           Bet Amount
         </label>
-        <div className="flex items-center gap-3 bg-[#0B0F2A] rounded-xl p-2 border border-white/5 shadow-inner">
+        <div className="flex items-center gap-3 bg-[#242E4D] rounded-xl p-2 border border-white/5 shadow-inner">
           <button
             onClick={() => setBetAmount(Math.max(10, betAmount - 10))}
             className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-gray-400 hover:bg-white/5"
@@ -92,7 +92,7 @@ const PlinkoControls = ({
             <button
               key={val}
               onClick={() => setBetAmount(val)}
-              className="py-2 rounded-lg bg-[#0B0F2A] border border-white/5 text-[10px] font-black text-gray-400 hover:text-white transition-all"
+              className="py-2 rounded-lg bg-[#242E4D] border border-white/5 text-[10px] font-black text-gray-400 hover:text-white transition-all"
             >
               ₹{val}
             </button>
@@ -109,7 +109,7 @@ const PlinkoControls = ({
         className={`w-full py-4 rounded-xl font-black text-lg uppercase tracking-wider transition-all shadow-xl
           ${betAmount <= 0 || betAmount > balance
             ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-            : 'bg-green-600 hover:bg-green-500 text-white shadow-green-600/30'
+            : 'bg-pink-600 hover:bg-pink-500 text-white shadow-pink-600/30'
           }
         `}
       >

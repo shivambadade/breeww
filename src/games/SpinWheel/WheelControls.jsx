@@ -13,10 +13,10 @@ const WheelControls = ({
   const riskOptions = ['low', 'medium', 'high'];
 
   return (
-    <div className="bg-[#141A3C]/50 backdrop-blur-md p-6 rounded-3xl shadow-2xl border border-white/5 space-y-6 flex flex-col justify-center">
+    <div className="bg-[#242E4D] p-6 rounded-3xl shadow-2xl border border-white/5 space-y-6 flex flex-col justify-center">
       {/* Risk Selector */}
       <div className="space-y-2">
-        <label className="text-xs font-black text-gray-500 uppercase tracking-widest block ml-1">
+        <label className="text-xs font-black text-gray-400 uppercase tracking-widest block ml-1">
           Risk Level
         </label>
         <div className="grid grid-cols-3 gap-2">
@@ -27,8 +27,8 @@ const WheelControls = ({
               disabled={isSpinning}
               className={`py-2.5 rounded-xl text-xs font-black transition-all border uppercase
                 ${risk === option
-                  ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg'
-                  : 'bg-[#0B0F2A] border-white/5 text-gray-400 hover:text-gray-200'
+                  ? 'bg-[#E60000] border-[#FFD700] text-white shadow-lg shadow-red-600/20'
+                  : 'bg-[#1B233D] border-white/5 text-gray-400 hover:text-gray-200'
                 }
                 ${isSpinning ? 'opacity-50 cursor-not-allowed' : ''}
               `}
@@ -90,7 +90,7 @@ const WheelControls = ({
         className={`w-full py-4 rounded-xl font-black text-lg uppercase tracking-wider transition-all shadow-xl
           ${isSpinning || betAmount <= 0 || betAmount > balance
             ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-            : 'bg-green-600 hover:bg-green-500 text-white shadow-green-600/30'
+            : 'bg-gradient-to-b from-[#FF5C38] to-[#E60000] border-2 border-[#FFD700]/50 text-white shadow-red-600/30'
           }
         `}
       >

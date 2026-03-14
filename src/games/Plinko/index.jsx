@@ -88,7 +88,7 @@ const Plinko = () => {
 
   return (
     <GameLayout title="PLINKO" isWide={true}>
-      <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto pb-10">
+      <div className="flex flex-col gap-6 w-full px-4 pt-4 pb-10">
         
         {/* Balance Section */}
         <div className="bg-[#141A3C]/80 backdrop-blur-md rounded-2xl p-6 border border-white/5 shadow-2xl flex items-center justify-between">

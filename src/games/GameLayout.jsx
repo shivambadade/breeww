@@ -1,49 +1,48 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Info, Settings } from 'lucide-react';
-import { useWallet } from '../context/WalletContext';
+import { ChevronLeft, Info } from 'lucide-react';
+import { useWallet } from '../hooks/useWallet';
 import { formatINR } from '../utils/formatCurrency';
 import BetPanel from '../components/betting/BetPanel';
 
-const GameLayout = ({ title, children, onPlaceBet, betDisabled, isWide = false, hideBetPanel = false }) => {
+const GameLayout = ({ title, children, onPlaceBet, betDisabled, isWide = false, hideBetPanel = false, hideHeader = false }) => {
   const navigate = useNavigate();
   const { balance } = useWallet();
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex justify-center overflow-hidden">
-      <div className={`w-full ${isWide ? 'max-w-md lg:max-w-[1600px]' : 'max-w-md'} bg-casino-dark flex flex-col h-full relative shadow-2xl border-x border-gray-800/50`}>
+    <div className="fixed inset-0 z-[60] bg-[#8c919e] flex justify-center overflow-hidden">
+      <div className={`w-full ${isWide ? 'lg:max-w-none' : 'max-w-md'} bg-[#1B233D] flex flex-col h-full relative shadow-2xl border-x border-white/5`}>
         {/* Game Header */}
-        <header className="h-14 bg-casino-card border-b border-gray-800 flex items-center justify-between px-4 shrink-0 shadow-lg relative z-20">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => navigate('/')} 
-              className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <span className="font-bold tracking-tight text-white uppercase">{title}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="bg-gray-900 px-3 py-1.5 rounded-full font-mono font-bold text-green-400 text-sm border border-white/5 shadow-inner">
-              Wallet: {formatINR(balance)}
+        {!hideHeader && (
+          <header className="h-14 bg-[#242E4D] border-b border-white/5 flex items-center justify-between px-4 shrink-0 shadow-lg relative z-20">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => navigate('/')} 
+                className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <span className="font-bold tracking-tight text-white uppercase text-sm">{title}</span>
             </div>
-            <button className="text-gray-500 hover:text-white p-1">
-              <Info size={18} />
-            </button>
-          </div>
-        </header>
+            <div className="flex items-center gap-2">
+              <div className="bg-[#1B233D] px-3 py-1.5 rounded-full font-bold text-[#FFD700] text-xs border border-white/5 shadow-inner">
+                {formatINR(balance)}
+              </div>
+            </div>
+          </header>
+        )}
 
         {/* Main Game Content Area */}
-        <main className="flex-1 relative overflow-y-auto overflow-x-hidden pl-4 pr-3 pt-4 pb-12 custom-scrollbar scroll-smooth">
-          <div className="flex flex-col gap-4 pr-1">
+        <main className={`flex-1 relative overflow-y-auto overflow-x-hidden ${isWide ? '' : 'px-4 pt-4 pb-12'} custom-scrollbar scroll-smooth`}>
+          <div className={`flex flex-col ${isWide ? 'w-full h-full' : 'gap-4'}`}>
             {children}
           </div>
         </main>
 
         {/* Reusable Bet Panel */}
         {!hideBetPanel && (
-          <footer className="shrink-0 bg-casino-card border-t border-gray-800 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] z-20">
-            <div className={`${isWide ? 'max-w-6xl mx-auto w-full' : ''}`}>
+          <footer className="shrink-0 bg-[#242E4D] border-t border-white/5 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] z-20">
+            <div className={`${isWide ? 'w-full' : ''}`}>
               <BetPanel onPlaceBet={onPlaceBet} disabled={betDisabled} />
             </div>
           </footer>

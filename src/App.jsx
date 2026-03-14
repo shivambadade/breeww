@@ -5,6 +5,10 @@ import Home from './pages/Home';
 import Activity from './pages/Activity';
 import Bonuses from './pages/Bonuses';
 import Account from './pages/Account';
+import InviteWheel from './pages/InviteWheel';
+import Notifications from './pages/Notifications';
+import Login from './pages/Login';
+import Register from './pages/Register';
 
 // Games
 import Aviator from './games/Aviator';
@@ -22,9 +26,16 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="activity" element={<Activity />} />
-          <Route path="bonuses" element={<Bonuses />} />
+          <Route path="promotion" element={<Bonuses />} />
+          <Route path="wallet" element={<Account />} />
           <Route path="account" element={<Account />} />
         </Route>
+        
+        {/* Full-screen pages without Layout */}
+        <Route path="/invite-wheel" element={<InviteWheel />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         
         {/* Game Routes - Rendered without Layout for full-screen feel */}
         <Route path="/game/aviator" element={<Aviator />} />

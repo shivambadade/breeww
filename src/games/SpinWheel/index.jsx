@@ -137,28 +137,28 @@ const SpinWheel = () => {
   }, [balance, isSpinning, placeBet, segments, rotation, fetchSpinResult, addBet, addWin, clearBets, risk]);
 
   return (
-    <GameLayout title="SPIN WHEEL" isWide={true}>
-      <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto pb-10">
+    <GameLayout title="SPIN WHEEL">
+      <div className="flex flex-col gap-6 w-full pb-10">
         
         {/* Balance Section */}
-        <div className="bg-[#141A3C]/80 backdrop-blur-md rounded-2xl p-6 border border-white/5 shadow-2xl flex items-center justify-between">
+        <div className="bg-[#242E4D] rounded-2xl p-6 border border-white/5 shadow-2xl flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-4 bg-green-500/10 rounded-2xl text-green-400 border border-green-500/20 shadow-inner">
+            <div className="p-4 bg-[#FFD700]/10 rounded-2xl text-[#FFD700] border border-[#FFD700]/20 shadow-inner">
               <Wallet size={32} />
             </div>
             <div>
-              <div className="text-gray-400 text-xs font-black uppercase tracking-widest mb-1">Your Balance</div>
+              <div className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Your Balance</div>
               <div className="text-3xl font-black text-white">{formatINR(balance)}</div>
             </div>
           </div>
-          <button className="bg-indigo-600 px-10 py-4 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl active:scale-95">
+          <button className="bg-gradient-to-b from-[#FFD700] to-[#FF8C00] px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest text-[#B30000] shadow-lg active:scale-95 transition-transform">
             Deposit
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,0.8fr] gap-12 items-center">
+        <div className="flex flex-col gap-8 items-center">
           {/* Wheel Board Side */}
-          <div className="order-2 lg:order-1 flex flex-col items-center">
+          <div className="w-full flex flex-col items-center">
             <WheelCanvas 
               segments={segments} 
               rotation={rotation} 
@@ -168,7 +168,7 @@ const SpinWheel = () => {
           </div>
 
           {/* Controls Side */}
-          <div className="order-1 lg:order-2 h-full flex flex-col justify-center">
+          <div className="w-full flex flex-col justify-center">
             <WheelControls 
               betAmount={betAmount}
               setBetAmount={setBetAmount}
@@ -208,10 +208,10 @@ const SpinWheel = () => {
         </AnimatePresence>
 
         {/* History Table */}
-        <div className="bg-[#141A3C] rounded-2xl border border-white/5 shadow-xl overflow-hidden mt-4">
-          <div className="p-4 border-b border-white/5 flex items-center gap-2 bg-white/5">
-            <History size={16} className="text-casino-accent" />
-            <h3 className="text-xs font-black uppercase tracking-widest text-gray-300">Game History</h3>
+        <div className="bg-[#242E4D] rounded-2xl border border-white/5 shadow-xl overflow-hidden mt-4">
+          <div className="p-4 border-b border-white/5 flex items-center gap-2 bg-[#2D4594]">
+            <History size={16} className="text-[#FFD700]" />
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-white">Game History</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">

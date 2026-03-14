@@ -1,26 +1,23 @@
 import React from 'react';
 import Banner from '../components/layout/Banner';
-import GameCard from '../components/common/Card';
+import Announcement from '../components/layout/Announcement';
+import GameCategoryGrid from '../components/layout/GameCategoryGrid';
+import PlatformRecommendation from '../components/layout/PlatformRecommendation';
+import WinningInfo from '../components/layout/WinningInfo';
+import EarningsChart from '../components/layout/EarningsChart';
+import PlatformFooter from '../components/layout/PlatformFooter';
 import { GAMES } from '../constants/games';
 
 const Home = () => {
   return (
-    <div>
+    <div className="bg-[#1B233D] min-h-screen relative">
       <Banner />
-      
-
-      <div className="mb-20">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold uppercase tracking-wide">Popular Games</h2>
-          <button className="text-xs font-semibold text-casino-accent hover:underline">View All</button>
-        </div>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {GAMES.map((game) => (
-            <GameCard key={game.id} game={game} />
-          ))}
-        </div>
-      </div>
+      <Announcement />
+      <GameCategoryGrid />
+      <PlatformRecommendation games={GAMES.slice(0, 9)} />
+      <WinningInfo />
+      <EarningsChart />
+      <PlatformFooter />
     </div>
   );
 };

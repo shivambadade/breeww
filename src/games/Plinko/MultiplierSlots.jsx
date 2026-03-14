@@ -7,14 +7,14 @@ const MultiplierSlots = ({ multipliers, slotWidth, activeSlotIndex }) => {
       {multipliers.map((multiplier, index) => (
         <motion.div
           key={index}
-          className={`flex items-center justify-center h-10 rounded-lg text-xs font-black shadow-lg transition-all
-            ${index === activeSlotIndex ? 'scale-110 shadow-indigo-600/50' : ''}
-            ${multiplier >= 2 ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400'}
+          className={`flex items-center justify-center h-10 rounded-lg text-[10px] font-black shadow-lg transition-all
+            ${index === activeSlotIndex ? 'scale-110 shadow-pink-600/50' : ''}
+            ${multiplier >= 2 ? 'bg-pink-600 text-white' : 'bg-[#242E4D] text-gray-400'}
           `}
           style={{ width: `${slotWidth}px` }}
           animate={{
             scale: index === activeSlotIndex ? 1.2 : 1,
-            backgroundColor: index === activeSlotIndex ? '#4f46e5' : multiplier >= 2 ? '#4f46e5' : '#1f2937',
+            backgroundColor: index === activeSlotIndex ? '#db2777' : multiplier >= 2 ? '#db2777' : '#242E4D',
           }}
         >
           {multiplier}x

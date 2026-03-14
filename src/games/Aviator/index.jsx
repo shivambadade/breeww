@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Info, HelpCircle } from 'lucide-react';
+import { HelpCircle, Menu } from 'lucide-react';
 import GameLayout from '../GameLayout';
 import { useWallet } from '../../hooks/useWallet';
 import { useBets } from '../../hooks/useBets';
@@ -12,24 +12,24 @@ import AviatorSidebar from './AviatorSidebar';
 
 const Aviator = () => {
   const { balance, placeBet, addWin } = useWallet();
-  const { addBet, clearBets } = useBets();
+  const { addBet } = useBets();
 
   // Game States
   const [gameState, setGameState] = useState('waiting'); // waiting, running, crashed
   const [multiplier, setMultiplier] = useState(1.0);
   const [crashAt, setCrashAt] = useState(0);
   const [history, setHistory] = useState([
-    { id: 1, multiplier: 1.39 },
-    { id: 2, multiplier: 2.08 },
-    { id: 3, multiplier: 1.60 },
+    { id: 1, multiplier: 1.44 },
+    { id: 2, multiplier: 1.56 },
+    { id: 3, multiplier: 2.24 },
     { id: 4, multiplier: 1.00 },
-    { id: 5, multiplier: 1.74 },
-    { id: 6, multiplier: 26.70 },
-    { id: 7, multiplier: 2.52 },
+    { id: 5, multiplier: 1.73 },
+    { id: 6, multiplier: 1.14 },
+    { id: 7, multiplier: 7.04 },
   ]);
 
   // Betting States
-  const [betAmount, setBetAmount] = useState(100);
+  const [betAmount, setBetAmount] = useState(10.00);
   const [hasCashedOut, setHasCashedOut] = useState(false);
   const [isBetPlaced, setIsBetPlaced] = useState(false);
   const [showBetSuccess, setShowBetSuccess] = useState(false);
@@ -37,13 +37,13 @@ const Aviator = () => {
 
   // Mock initial bets
   useEffect(() => {
-    const mockUsers = ['x***6', 'a***9', 'x***1', 'm***9', 'w***8', 'z***8', 'f***e', 'y***8'];
+    const mockUsers = ['f***3', 'q***4', 'z***9', 's***1', 's***1', 'x***8', 'd***6', 'w***2'];
     const initialBets = mockUsers.map((user, i) => ({
       id: i,
       user,
       amount: Math.floor(Math.random() * 5000) + 1000,
-      hasCashedOut: false,
-      cashoutMult: 0
+      hasCashedOut: i === 3,
+      cashoutMult: i === 3 ? 1.01 : 0
     }));
     setAllBets(initialBets);
   }, []);
@@ -55,7 +55,6 @@ const Aviator = () => {
       const startTime = Date.now();
       interval = setInterval(() => {
         const elapsed = (Date.now() - startTime) / 1000;
-        // Exponential-like growth formula for multiplier
         const newMultiplier = Math.pow(Math.E, 0.06 * elapsed);
         
         if (newMultiplier >= crashAt) {
@@ -65,7 +64,6 @@ const Aviator = () => {
         } else {
           setMultiplier(newMultiplier);
           
-          // Randomly cash out some mock users
           setAllBets(prev => prev.map(bet => {
             if (!bet.hasCashedOut && Math.random() < 0.01 && newMultiplier > 1.2) {
               return { ...bet, hasCashedOut: true, cashoutMult: newMultiplier };
@@ -80,12 +78,9 @@ const Aviator = () => {
       setMultiplier(1.0);
       setHasCashedOut(false);
       setIsBetPlaced(false);
-      // Reset mock bets for new round
       setAllBets(prev => prev.map(bet => ({ ...bet, hasCashedOut: false, cashoutMult: 0 })));
       
       const timer = setTimeout(() => {
-        // Generate random crash point following a crash game distribution
-        // Probability of crashing at x is roughly 1/x
         const r = Math.random();
         const crash = 0.99 / (1 - r);
         setCrashAt(Math.max(1.0, crash));
@@ -95,7 +90,7 @@ const Aviator = () => {
     }
 
     if (gameState === 'crashed') {
-      setHistory(prev => [{ id: Date.now(), multiplier }, ...prev].slice(0, 15));
+      setHistory(prev => [{ id: Date.now(), multiplier }, ...prev].slice(0, 20));
       const timer = setTimeout(() => {
         setGameState('waiting');
       }, 4000);
@@ -106,25 +101,15 @@ const Aviator = () => {
   }, [gameState, crashAt]);
 
   const handlePlaceBet = useCallback((amount) => {
-    if (gameState === 'running' && !isBetPlaced) {
-      // Allow betting during run for NEXT round
-      setIsBetPlaced(true);
-      setShowBetSuccess(true);
-      setTimeout(() => setShowBetSuccess(false), 2000);
-      return;
-    }
-    if (gameState !== 'waiting' || isBetPlaced) return;
+    if (gameState !== 'waiting' && gameState !== 'running') return;
+    if (isBetPlaced) return;
     if (amount <= 0 || amount > balance) return;
 
     if (placeBet(amount)) {
       setIsBetPlaced(true);
       setShowBetSuccess(true);
       setTimeout(() => setShowBetSuccess(false), 2000);
-      addBet({
-        type: 'aviator',
-        amount,
-        target: 'crash'
-      });
+      addBet({ type: 'aviator', amount, target: 'crash' });
     }
   }, [gameState, isBetPlaced, balance, placeBet, addBet]);
 
@@ -133,7 +118,6 @@ const Aviator = () => {
       const winAmount = betAmount * multiplier;
       addWin(winAmount);
       setHasCashedOut(true);
-      // Update our bet in the sidebar (simulated)
       setAllBets(prev => [{
         id: 'me',
         user: 'You',
@@ -145,46 +129,68 @@ const Aviator = () => {
   }, [gameState, isBetPlaced, hasCashedOut, betAmount, multiplier, addWin]);
 
   return (
-    <GameLayout title="AVIATOR" isWide={true} hideBetPanel={true}>
-      <div className="flex flex-col lg:flex-row gap-4 max-w-[1600px] mx-auto w-full pb-10">
-        
-        {/* Left Sidebar - Bets List */}
-        <div className="hidden lg:block w-[300px] shrink-0">
-          <AviatorSidebar allBets={allBets} />
+    <GameLayout title="AVIATOR" isWide={true} hideBetPanel={true} hideHeader={true}>
+      <div className="flex flex-col h-full bg-black w-full overflow-hidden">
+        {/* Custom Aviator Header - Fixed top */}
+        <div className="flex items-center justify-between px-4 py-2 bg-[#1c1c1e] border-b border-white/5 shrink-0 z-30">
+          <div className="flex items-center gap-4">
+            <span className="text-red-600 font-black text-2xl italic tracking-tighter uppercase">Aviator</span>
+            <button className="flex items-center gap-1.5 bg-[#f4b400] text-black px-4 py-1.5 rounded-full text-[10px] font-black uppercase shadow-lg hover:scale-105 transition-all">
+              <HelpCircle size={14} className="border-2 border-black rounded-full p-0.5" />
+              How to play?
+            </button>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-green-500 font-black text-base tabular-nums">{balance.toFixed(2)}</span>
+              <span className="text-gray-500 text-[10px] font-bold uppercase">INR</span>
+            </div>
+            <button className="text-gray-400 hover:text-white transition-colors">
+              <Menu size={24} />
+            </button>
+          </div>
         </div>
 
-        {/* Center Main Area */}
-        <div className="flex-1 flex flex-col min-w-0">
-          
-          {/* Top Multiplier History */}
-          <AviatorHistory history={history} />
-
-          {/* Graph Section */}
-          <div className="flex-1 min-h-[350px] md:min-h-[450px]">
-            <AviatorGraph multiplier={multiplier} gameState={gameState} />
-          </div>
-
-          {/* Betting Controls */}
-          <AviatorControls 
-            betAmount={betAmount}
-            setBetAmount={setBetAmount}
-            onPlaceBet={handlePlaceBet}
-            onCashout={handleCashout}
-            gameState={gameState}
-            isBetPlaced={isBetPlaced}
-            hasCashedOut={hasCashedOut}
-            multiplier={multiplier}
-          />
-
-          {/* Small screens sidebar (collapsible/below) */}
-          <div className="lg:hidden mt-6">
+        {/* Main Content Area - Responsive Flex */}
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+          {/* Sidebar - All Bets (hidden on mobile, scrollable on desktop) */}
+          <div className="hidden lg:flex lg:w-[320px] xl:w-[350px] shrink-0 h-full overflow-hidden border-r border-white/5">
             <AviatorSidebar allBets={allBets} />
           </div>
-        </div>
 
+          {/* Game Center Area - Responsive width */}
+          <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto custom-scrollbar bg-[#000000]">
+            {/* Multiplier History Strip */}
+            <AviatorHistory history={history} />
+
+            {/* Graph / Main Area - Expands to fill space */}
+            <div className="flex-1 relative aspect-video lg:aspect-auto min-h-[300px] md:min-h-[400px] bg-[#000000] overflow-hidden">
+              <AviatorGraph multiplier={multiplier} gameState={gameState} />
+            </div>
+
+            {/* Betting Controls - Two columns on large, stacked on mobile if needed */}
+            <div className="w-full shrink-0 p-2 bg-[#0a0a0a] border-t border-white/5">
+              <AviatorControls 
+                betAmount={betAmount}
+                setBetAmount={setBetAmount}
+                onPlaceBet={handlePlaceBet}
+                onCashout={handleCashout}
+                gameState={gameState}
+                isBetPlaced={isBetPlaced}
+                hasCashedOut={hasCashedOut}
+                multiplier={multiplier}
+              />
+            </div>
+
+            {/* Mobile Sidebar - Show below game on mobile */}
+            <div className="lg:hidden w-full min-h-[400px] bg-[#0a0a0a] border-t border-white/5">
+              <AviatorSidebar allBets={allBets} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Bet Success Toast */}
+      {/* Overlays */}
       <AnimatePresence>
         {showBetSuccess && (
           <motion.div
@@ -200,16 +206,15 @@ const Aviator = () => {
         )}
       </AnimatePresence>
 
-      {/* Cashout Success Overlay */}
       <AnimatePresence>
         {hasCashedOut && (
           <motion.div
             initial={{ scale: 0.5, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.5, opacity: 0, y: -20 }}
-            className="fixed inset-0 pointer-events-none flex items-center justify-center z-[70] pb-40 lg:pb-0"
+            className="fixed inset-0 pointer-events-none flex items-center justify-center z-[70]"
           >
-            <div className="bg-green-600 px-10 py-5 rounded-2xl shadow-[0_0_50px_rgba(22,163,74,0.5)] border-2 border-green-400 text-center backdrop-blur-sm bg-opacity-90">
+            <div className="bg-[#28a745] px-10 py-5 rounded-2xl shadow-[0_0_50px_rgba(40,167,69,0.5)] border-2 border-green-400 text-center backdrop-blur-sm bg-opacity-90">
               <div className="text-white text-xs font-black uppercase tracking-widest mb-1">You cashed out at</div>
               <div className="text-4xl font-black text-white italic tracking-tighter mb-1">
                 {multiplier.toFixed(2)}x

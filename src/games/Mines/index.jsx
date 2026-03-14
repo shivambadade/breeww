@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, History, CheckCircle2, Info, TrendingUp } from 'lucide-react';
+import { Wallet, History, CheckCircle2, Info, TrendingUp, Minus, Plus, RefreshCw } from 'lucide-react';
 import GameLayout from '../GameLayout';
 import { useWallet } from '../../hooks/useWallet';
 import { useBets } from '../../hooks/useBets';
@@ -22,6 +22,7 @@ const Mines = () => {
   const [multiplier, setMultiplier] = useState(1);
   const [gameHistory, setGameHistory] = useState([]);
   const [lastWin, setLastWin] = useState(null);
+  const [autoGame, setAutoGame] = useState(false);
 
   // Multiplier logic: 1 + openedTiles * 0.2
   // We'll use a slightly adjusted one that scales with mine count for better gameplay
@@ -127,162 +128,78 @@ const Mines = () => {
     setTimeout(() => clearBets(), 3000);
   };
 
+  const handleRandom = () => {
+    const opts = [1, 3, 5, 8, 10];
+    setMineCount(opts[Math.floor(Math.random() * opts.length)]);
+  };
+
+  useEffect(() => {
+    if (autoGame && gameStatus === 'ended') {
+      const delay = setTimeout(() => {
+        if (balance > 0) {
+          startGame(Math.max(10, Math.min(100, balance)));
+        }
+      }, 1500);
+      return () => clearTimeout(delay);
+    }
+  }, [autoGame, gameStatus, balance]);
+
   return (
-    <GameLayout title="MINES" isWide={true}>
-      <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto pb-10">
-        
-        {/* Balance Section */}
-        <div className="bg-[#141A3C]/80 backdrop-blur-md rounded-2xl p-6 border border-white/5 shadow-2xl flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-green-500/10 rounded-2xl text-green-400 border border-green-500/20 shadow-inner">
-              <Wallet size={32} />
+    <GameLayout title="MINES" isWide={true} hideHeader hideBetPanel>
+      <div className="bg-gradient-to-br from-[#0f57c7] via-[#0f65e1] to-[#1571ff] min-h-screen text-white p-2 md:p-4">
+        <div className="mx-auto max-w-6xl rounded-3xl border border-white/20 bg-[#0b3f95]/80 p-3 md:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0e3b90] border border-blue-500/30 rounded-2xl p-2 md:p-3">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em]">
+              <div className="bg-[#143f82] px-2 py-1 rounded-full">MINES</div>
+              <div className="bg-[#f7a93b] px-2 py-1 rounded-full text-black">How to Play?</div>
             </div>
-            <div>
-              <div className="text-gray-400 text-xs font-black uppercase tracking-widest mb-1">Your Balance</div>
-              <div className="text-3xl font-black text-white">{formatINR(balance)}</div>
+            <div className="flex items-center gap-2 text-xs font-black">
+              <div className="bg-[#143f82] px-2 py-1 rounded-full">Mines: {mineCount}</div>
+              <div className="bg-[#f7a93b] px-2 py-1 rounded-full text-black">Next: {multiplier.toFixed(2)}x</div>
             </div>
-          </div>
-          <button className="bg-indigo-600 px-10 py-4 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-indigo-600/20 active:scale-95">
-            Deposit
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,0.8fr] gap-8">
-          {/* Game Board Side */}
-          <div className="order-2 lg:order-1 flex items-center justify-center">
-            <MineGrid 
-              tiles={tiles} 
-              onTileClick={handleTileClick} 
-              gameStatus={gameStatus}
-              mines={minePositions}
-            />
+            <div className="text-xs font-black">{formatINR(balance)}</div>
           </div>
 
-          {/* Controls Side */}
-          <div className="order-1 lg:order-2">
-            <MineControls 
-              gameStatus={gameStatus}
-              betAmount={betAmount}
-              setBetAmount={setBetAmount}
-              mineCount={mineCount}
-              setMineCount={setMineCount}
-              onStart={startGame}
-              onCashout={cashOut}
-              revealedCount={revealedCount}
-              multiplier={multiplier}
-              balance={balance}
-            />
-          </div>
-        </div>
-
-        {/* Win Notification Overlay */}
-        <AnimatePresence>
-          {lastWin && (
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.5, opacity: 0, y: -20 }}
-              className="fixed inset-0 pointer-events-none flex items-center justify-center z-50"
-            >
-              <div className="bg-green-600 px-12 py-6 rounded-3xl shadow-[0_0_50px_rgba(22,163,74,0.5)] border-2 border-green-400 text-center">
-                <div className="text-white text-sm font-black uppercase tracking-widest mb-1">Big Win!</div>
-                <div className="text-4xl font-black text-white italic tracking-tighter">
-                  {formatINR(lastWin)}
-                </div>
+          <div className="mt-3 rounded-2xl border border-white/20 bg-[#103e9d]/90 p-3">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div className="text-xs font-black uppercase tracking-[0.15em] text-slate-200">Mines: {mineCount}</div>
+              <div className="flex items-center gap-2">
+                <button onClick={handleRandom} className="rounded-xl bg-[#1a4fbd] px-3 py-1 text-xs font-black uppercase">RANDOM</button>
+                <button onClick={() => setAutoGame(!autoGame)} className={`rounded-xl px-3 py-1 text-xs font-black uppercase ${autoGame ? 'bg-green-400 text-black' : 'bg-[#1a4fbd] text-white'}`}>
+                  Auto Game {autoGame ? 'On' : 'Off'}
+                </button>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
 
-        {/* Active Bets */}
-        <AnimatePresence>
+            <div className="mt-3">
+              <MineGrid tiles={tiles} onTileClick={handleTileClick} gameStatus={gameStatus} />
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="flex-1 min-w-[180px] rounded-xl border border-white/20 bg-[#0c2e78] p-2 text-center">
+                <div className="text-[10px] uppercase tracking-[0.1em]">Bet INR</div>
+                <div className="text-xl font-black">{(betAmount/100).toFixed(2)}</div>
+              </div>
+              <button onClick={() => setBetAmount(Math.max(10, betAmount - 10))} className="w-10 h-10 rounded-full bg-[#1f4ec2] flex items-center justify-center">-</button>
+              <button onClick={() => setBetAmount(Math.min(balance, betAmount + 10))} className="w-10 h-10 rounded-full bg-[#1f4ec2] flex items-center justify-center">+</button>
+              <button onClick={() => onStart(betAmount)} disabled={betAmount <= 0 || betAmount > balance} className="flex-1 rounded-xl bg-[#2dc329] text-black font-black py-2 uppercase">BET</button>
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {lastWin && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="mt-3 rounded-xl bg-green-500/90 p-2 text-center font-black">
+                Big Win! {formatINR(lastWin)}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {bets.length > 0 && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              className="bg-[#141A3C] rounded-2xl border border-white/5 shadow-xl overflow-hidden mt-4"
-            >
-              <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-green-400" />
-                  <h3 className="text-xs font-black uppercase tracking-widest">Active Bet</h3>
-                </div>
-                <div className="text-xs font-black text-white">
-                  {formatINR(totalBetAmount)}
-                </div>
-              </div>
-              <div className="p-4 flex items-center justify-between bg-[#0B0F2A]/50">
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-500 font-bold uppercase">Mines</span>
-                    <span className="text-xs font-black text-white">{mineCount}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-500 font-bold uppercase">Status</span>
-                    <span className="text-xs font-black text-indigo-400 animate-pulse uppercase">In Play</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase block">Current Payout</span>
-                  <span className="text-sm font-black text-green-400">{multiplier.toFixed(2)}x</span>
-                </div>
-              </div>
-            </motion.div>
+            <div className="mt-3 rounded-xl border border-white/20 bg-[#0d2a72] p-2 text-xs font-black uppercase tracking-[0.15em]">
+              Active Bet: {formatINR(totalBetAmount)}
+            </div>
           )}
-        </AnimatePresence>
-
-        {/* History Table */}
-        <div className="bg-[#141A3C] rounded-2xl border border-white/5 shadow-xl overflow-hidden mt-4">
-          <div className="p-4 border-b border-white/5 flex items-center gap-2 bg-white/5">
-            <History size={16} className="text-casino-accent" />
-            <h3 className="text-xs font-black uppercase tracking-widest text-gray-300">Game History</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-[10px] font-black text-gray-500 uppercase tracking-widest bg-black/20">
-                  <th className="px-5 py-3">Mines</th>
-                  <th className="px-5 py-3">Tiles</th>
-                  <th className="px-5 py-3">Outcome</th>
-                  <th className="px-5 py-3 text-right">Profit</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {gameHistory.length > 0 ? (
-                  gameHistory.map((h) => (
-                    <tr key={h.id} className="text-xs font-bold text-gray-300 hover:bg-white/5 transition-colors">
-                      <td className="px-5 py-3">
-                        <span className="bg-red-500/10 text-red-500 px-2 py-1 rounded-md text-[10px]">
-                          {h.mines} 💣
-                        </span>
-                      </td>
-                      <td className="px-5 py-3">
-                        <span className="bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded-md text-[10px]">
-                          {h.revealed} 💎
-                        </span>
-                      </td>
-                      <td className="px-5 py-3">
-                        <span className={h.outcome === 'Win' ? 'text-green-500' : 'text-red-500'}>
-                          {h.outcome}
-                        </span>
-                      </td>
-                      <td className={`px-5 py-3 text-right font-black ${h.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {h.profit >= 0 ? '+' : ''}{h.profit.toFixed(0)}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="px-5 py-10 text-center text-gray-600 italic">
-                      No game history yet
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
         </div>
-
       </div>
     </GameLayout>
   );
