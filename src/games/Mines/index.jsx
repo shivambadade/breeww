@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, History, CheckCircle2, Info, TrendingUp, Minus, Plus, RefreshCw } from 'lucide-react';
+import { Wallet, History, CheckCircle2, Info, TrendingUp } from 'lucide-react';
 import GameLayout from '../GameLayout';
 import { useWallet } from '../../hooks/useWallet';
 import { useBets } from '../../hooks/useBets';
@@ -175,14 +175,19 @@ const Mines = () => {
               <MineGrid tiles={tiles} onTileClick={handleTileClick} gameStatus={gameStatus} />
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <div className="flex-1 min-w-[180px] rounded-xl border border-white/20 bg-[#0c2e78] p-2 text-center">
-                <div className="text-[10px] uppercase tracking-[0.1em]">Bet INR</div>
-                <div className="text-xl font-black">{(betAmount/100).toFixed(2)}</div>
-              </div>
-              <button onClick={() => setBetAmount(Math.max(10, betAmount - 10))} className="w-10 h-10 rounded-full bg-[#1f4ec2] flex items-center justify-center">-</button>
-              <button onClick={() => setBetAmount(Math.min(balance, betAmount + 10))} className="w-10 h-10 rounded-full bg-[#1f4ec2] flex items-center justify-center">+</button>
-              <button onClick={() => onStart(betAmount)} disabled={betAmount <= 0 || betAmount > balance} className="flex-1 rounded-xl bg-[#2dc329] text-black font-black py-2 uppercase">BET</button>
+            <div className="mt-3">
+              <MineControls 
+                gameStatus={gameStatus}
+                betAmount={betAmount}
+                setBetAmount={setBetAmount}
+                mineCount={mineCount}
+                setMineCount={setMineCount}
+                onStart={startGame}
+                onCashout={cashOut}
+                revealedCount={revealedCount}
+                multiplier={multiplier}
+                balance={balance}
+              />
             </div>
           </div>
 

@@ -4,7 +4,7 @@ const AviatorSidebar = ({ allBets }) => {
   const [activeTab, setActiveTab] = useState('all'); // all, my, top
 
   return (
-    <div className="bg-[#1c1c1e] flex flex-col h-full overflow-hidden shadow-2xl border-r border-white/5">
+    <div className="bg-[#1c1c1e] flex flex-col h-full w-full overflow-hidden shadow-2xl">
       {/* Tabs */}
       <div className="flex bg-[#0a0a0a] rounded-full p-1 m-2 border border-white/5 shrink-0">
         {['All Bets', 'My Bets', 'Top'].map((tab) => (

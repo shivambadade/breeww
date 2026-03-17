@@ -33,7 +33,7 @@ const WheelControls = ({
                 ${isSpinning ? 'opacity-50 cursor-not-allowed' : ''}
               `}
             >
-              {option}
+              {option.toUpperCase()}
             </button>
           ))}
         </div>

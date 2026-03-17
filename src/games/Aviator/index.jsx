@@ -55,7 +55,7 @@ const Aviator = () => {
       const startTime = Date.now();
       interval = setInterval(() => {
         const elapsed = (Date.now() - startTime) / 1000;
-        const newMultiplier = Math.pow(Math.E, 0.06 * elapsed);
+        const newMultiplier = Math.pow(Math.E, 0.08 * elapsed);
         
         if (newMultiplier >= crashAt) {
           setMultiplier(crashAt);
@@ -154,7 +154,7 @@ const Aviator = () => {
         {/* Main Content Area - Responsive Flex */}
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
           {/* Sidebar - All Bets (hidden on mobile, scrollable on desktop) */}
-          <div className="hidden lg:flex lg:w-[320px] xl:w-[350px] shrink-0 h-full overflow-hidden border-r border-white/5">
+          <div className="hidden lg:flex lg:w-[450px] xl:w-[500px] shrink-0 h-full overflow-hidden border-r border-white/5">
             <AviatorSidebar allBets={allBets} />
           </div>
 

@@ -21,44 +21,24 @@ const SpinWheel = () => {
 
   // Multiplier segments configuration
   const allSegments = useMemo(() => {
-    const imgValues = [2000, 1500, 3000, 8000, 5000, 1000, 3000, 1500, 7000, 4000, 10000, 3000, 2500, 5000, 1000];
-    const imgColors = [
-      '#22c55e', // 2000 Green
-      '#ef4444', // 1500 Red
-      '#a855f7', // 3000 Purple
-      '#eab308', // 8000 Yellow
-      '#3b82f6', // 5000 Blue
-      '#ef4444', // 1000 Red
-      '#a855f7', // 3000 Purple
-      '#eab308', // 1500 Yellow
-      '#22c55e', // 7000 Green
-      '#a855f7', // 4000 Purple
-      '#eab308', // 10000 Yellow
-      '#3b82f6', // 3000 Blue
-      '#ef4444', // 2500 Red
-      '#a855f7', // 5000 Purple
-      '#eab308'  // 1000 Yellow
-    ];
-    
-    const imageSegments = imgValues.map((val, i) => ({
-      mult: val / 100, // 2000 becomes 20x. Bet 100 * 20 = 2000 win.
-      label: val.toLocaleString(),
-      color: imgColors[i]
-    }));
-
     return {
       low: [
-        { mult: 1.5, label: '1.5x', color: '#4f46e5' }, { mult: 1.2, label: '1.2x', color: '#312e81' }, 
-        { mult: 1, label: '1.0x', color: '#1e1b4b' }, { mult: 1.2, label: '1.2x', color: '#312e81' },
-        { mult: 1.5, label: '1.5x', color: '#4f46e5' }, { mult: 2, label: '2.0x', color: '#6366f1' },
-        { mult: 1, label: '1.0x', color: '#1e1b4b' }, { mult: 5, label: '5.0x', color: '#fbbf24' }
+        { mult: 1.5, label: '1.5x', color: '#E60000' }, { mult: 1.2, label: '1.2x', color: '#CC0000' }, 
+        { mult: 0, label: '0x', color: '#E60000' }, { mult: 1.2, label: '1.2x', color: '#CC0000' },
+        { mult: 1.5, label: '1.5x', color: '#E60000' }, { mult: 2, label: '2.0x', color: '#CC0000' },
+        { mult: 1, label: '1.0x', color: '#E60000' }, { mult: 5, label: '5.0x', color: '#CC0000' }
       ],
-      medium: imageSegments,
+      medium: [
+        { mult: 2, label: '2.0x', color: '#E60000' }, { mult: 0, label: '0x', color: '#CC0000' },
+        { mult: 3, label: '3.0x', color: '#E60000' }, { mult: 1.5, label: '1.5x', color: '#CC0000' },
+        { mult: 5, label: '5.0x', color: '#E60000' }, { mult: 1, label: '1.0x', color: '#CC0000' },
+        { mult: 8, label: '8.0x', color: '#E60000' }, { mult: 10, label: '10.0x', color: '#CC0000' }
+      ],
       high: [
-        { mult: 0, label: '0x', color: '#0f172a' }, { mult: 5, label: '5x', color: '#4f46e5' },
-        { mult: 0, label: '0x', color: '#0f172a' }, { mult: 20, label: '20x', color: '#fbbf24' },
-        { mult: 0, label: '0x', color: '#0f172a' }, { mult: 10, label: '10x', color: '#6366f1' },
-        { mult: 0.2, label: '0.2x', color: '#312e81' }, { mult: 50, label: '50x', color: '#facc15' }
+        { mult: 0, label: '0x', color: '#E60000' }, { mult: 5, label: '5.0x', color: '#CC0000' },
+        { mult: 0, label: '0x', color: '#E60000' }, { mult: 20, label: '20.0x', color: '#CC0000' },
+        { mult: 0, label: '0x', color: '#E60000' }, { mult: 10, label: '10.0x', color: '#CC0000' },
+        { mult: 0.2, label: '0.2x', color: '#E60000' }, { mult: 50, label: '50.0x', color: '#CC0000' }
       ]
     };
   }, []);

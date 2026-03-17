@@ -71,19 +71,19 @@ const WheelCanvas = ({ segments, rotation, onSpin, isSpinning }) => {
                 <path
                   d={pathData}
                   fill={i % 2 === 0 ? '#E60000' : '#CC0000'}
-                  stroke="rgba(255,215,0,0.2)"
-                  strokeWidth="0.5"
+                  stroke="#FFD700"
+                  strokeWidth="0.2"
                 />
                 <text
-                  x="78"
+                  x="75"
                   y="50"
                   fill="#FFD700"
-                  fontSize="4"
-                  fontWeight="900"
+                  fontSize={segments.length > 10 ? '3.5' : '5'}
+                  fontWeight="950"
                   textAnchor="middle"
                   filter="url(#textShadow)"
                   className="select-none pointer-events-none"
-                  transform={`rotate(${i * segmentAngle + segmentAngle / 2}, 50, 50) rotate(90, 78, 50)`}
+                  transform={`rotate(${i * segmentAngle + segmentAngle / 2}, 50, 50) rotate(90, 75, 50)`}
                 >
                   {s.label}
                 </text>

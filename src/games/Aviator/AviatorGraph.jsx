@@ -88,26 +88,21 @@ const AviatorGraph = ({ multiplier, gameState }) => {
               animate={{ x: endX, y: endY, rotate: -5, opacity: 1 }}
               transition={{ duration: 0.1 }}
             >
-              {/* Detailed Red Airplane */}
-              <g transform="translate(-20, -10) scale(0.8)">
-                {/* Main Body */}
+              {/* Sleek Red Jet Plane */}
+              <g transform="translate(-55, -18) scale(1.8)">
+                {/* Main Fuselage */}
                 <path 
-                  d="M0,10 L30,10 L50,0 L60,10 L50,20 L30,10 Z" 
+                  d="M0,10 C10,10 20,8 30,5 L50,5 L60,10 L50,15 L30,15 C20,12 10,10 0,10 Z" 
                   fill="#ff0000" 
                 />
-                {/* Wings */}
-                <path d="M25,10 L10,-15 L30,-15 L40,10 Z" fill="#ff0000" />
-                <path d="M25,10 L10,35 L30,35 L40,10 Z" fill="#ff0000" />
-                {/* Propeller Hub */}
-                <circle cx="60" cy="10" r="3" fill="#ff0000" />
-                {/* Propeller Blade Animation */}
-                <motion.line 
-                    x1="60" y1="-5" x2="60" y2="25" 
-                    stroke="#ffffff" strokeWidth="2" opacity="0.6"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 0.1, repeat: Infinity, ease: "linear" }}
-                    style={{ originX: "60px", originY: "10px" }}
-                />
+                {/* Top Wing */}
+                <path d="M25,10 L15,-10 L40,10 Z" fill="#ff0000" />
+                {/* Bottom Wing */}
+                <path d="M25,10 L15,30 L40,10 Z" fill="#ff0000" />
+                {/* Vertical Tail Stabilizer */}
+                <path d="M10,10 L0,0 L15,10 Z" fill="#cc0000" />
+                {/* Cockpit Window */}
+                <path d="M42,7 L52,10 L42,13 Z" fill="rgba(255,255,255,0.4)" />
               </g>
             </motion.g>
           )}
