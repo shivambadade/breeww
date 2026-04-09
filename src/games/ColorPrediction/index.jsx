@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Info, Wallet, Timer, CheckCircle2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 // Layout & Components
 import GameLayout from '../GameLayout';
@@ -16,26 +16,24 @@ import { formatINR } from '../../utils/formatCurrency';
 import { getColorClass } from '../../utils/gameHelpers';
 import { generateResult, evaluateBets } from '../../engines/predictionEngine';
 
-const ColorPrediction = () => {
-  const { balance, placeBet, addWin } = useWallet();
-  const { bets, addBet, clearBets, totalBetAmount } = useBets();
+const generatePreviewPeriod = () => Date.now().toString();
 
-  // Helper to generate period ID
-  const generatePeriod = () => Date.now().toString();
+const ColorPrediction = () => {
+  const { balance } = useWallet();
+  const { bets, addBet, clearBets } = useBets();
 
   // Timer and Period state
   const [timeLeft, setTimeLeft] = useState(30);
-  const [period, setPeriod] = useState(generatePeriod());
+  const [period, setPeriod] = useState(() => generatePreviewPeriod());
 
   // Local state
   const [selectedBet, setSelectedBet] = useState(null); // { type, value }
-  const [betAmount, setBetAmount] = useState('');
-  const [multiplier, setMultiplier] = useState(1);
   const [gameHistory, setGameHistory] = useState([]);
   const [currentRoundResult, setCurrentRoundResult] = useState(null);
   const [isResultRevealing, setIsResultRevealing] = useState(false);
   const [showBetSuccess, setShowBetSuccess] = useState(false);
   const [totalWinAmount, setTotalWinAmount] = useState(0);
+  const [resolvedBetCount, setResolvedBetCount] = useState(0);
 
   const betsRef = useRef([]);
 
@@ -62,11 +60,8 @@ const ColorPrediction = () => {
       
       // 3. Evaluate All Bets using Engine
       const currentBets = betsRef.current;
-      const { results, totalWon } = evaluateBets(currentBets, result);
-
-      if (totalWon > 0) {
-        addWin(totalWon);
-      }
+      const { totalWon } = evaluateBets(currentBets, result);
+      setResolvedBetCount(currentBets.length);
 
       setTotalWinAmount(totalWon);
 
@@ -76,12 +71,13 @@ const ColorPrediction = () => {
         setCurrentRoundResult(null);
         clearBets();
         setTotalWinAmount(0);
+        setResolvedBetCount(0);
         setSelectedBet(null);
-        setPeriod(generatePeriod());
+        setPeriod(generatePreviewPeriod());
         setTimeLeft(30);
       }, 3000);
     }, 2000);
-  }, [period, addWin, clearBets]);
+  }, [period, clearBets]);
 
   // Timer logic
   useEffect(() => {
@@ -100,14 +96,12 @@ const ColorPrediction = () => {
 
   const handleBetClick = (amount) => {
     if (!selectedBet) return;
-    if (amount <= 0 || amount > balance) return;
+    if (amount <= 0) return;
     if (timeLeft <= 5) return;
 
-    if (placeBet(amount)) {
-      addBet({ ...selectedBet, amount });
-      setShowBetSuccess(true);
-      setTimeout(() => setShowBetSuccess(false), 2000);
-    }
+    addBet({ ...selectedBet, amount, source: 'frontend-preview' });
+    setShowBetSuccess(true);
+    setTimeout(() => setShowBetSuccess(false), 2000);
   };
 
   const isBettingDisabled = timeLeft <= 5 || isResultRevealing;
@@ -124,6 +118,9 @@ const ColorPrediction = () => {
                 <div className="bg-orange-500/10 text-orange-500 p-1 rounded-md text-[10px] font-bold border border-orange-500/20 flex items-center gap-1">
                   <Info size={12} />
                   How to play
+                </div>
+                <div className="bg-sky-500/10 text-sky-300 p-1 rounded-md text-[10px] font-bold border border-sky-400/20">
+                  Preview Only
                 </div>
               </div>
               
@@ -199,7 +196,7 @@ const ColorPrediction = () => {
         {/* Countdown Overlay for last 5 seconds */}
         <AnimatePresence>
           {timeLeft <= 5 && timeLeft > 0 && !isResultRevealing && (
-            <motion.div 
+            <Motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -207,7 +204,7 @@ const ColorPrediction = () => {
             >
               <div className="flex gap-4">
                 {[0, timeLeft].map((digit, i) => (
-                  <motion.div
+                  <Motion.div
                     key={`${i}-${digit}`}
                     initial={{ y: 50, opacity: 0, scale: 0.5 }}
                     animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -216,17 +213,17 @@ const ColorPrediction = () => {
                     <span className="text-[120px] font-black text-[#c09a75] leading-none">
                       {digit}
                     </span>
-                  </motion.div>
+                  </Motion.div>
                 ))}
               </div>
-            </motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>
 
         {/* Bet Success Toast */}
         <AnimatePresence>
           {showBetSuccess && (
-            <motion.div
+            <Motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.5, opacity: 0 }}
@@ -236,32 +233,32 @@ const ColorPrediction = () => {
                 <CheckCircle2 size={24} />
                 Bet placed successfully
               </div>
-            </motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>
 
         {/* Result Reveal Animation Overlay */}
         <AnimatePresence>
           {isResultRevealing && (
-            <motion.div 
+            <Motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6"
             >
               <div className="w-full max-w-sm flex flex-col items-center">
-                <motion.div
+                <Motion.div
                   initial={{ y: -50, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   className="text-casino-accent text-xs font-black uppercase tracking-[0.3em] mb-12"
                 >
                   Winning Number
-                </motion.div>
+                </Motion.div>
 
                 {/* Number Cards Animation */}
                 <div className="flex gap-4 mb-12">
                   {[0, 1].map((index) => (
-                    <motion.div
+                    <Motion.div
                       key={index}
                       animate={{ 
                         rotateY: currentRoundResult ? 0 : [0, 180, 360, 540, 720],
@@ -276,14 +273,14 @@ const ColorPrediction = () => {
                       <div className="text-6xl font-black italic text-white">
                         {currentRoundResult ? (index === 0 ? '0' : currentRoundResult.number) : '?'}
                       </div>
-                    </motion.div>
+                    </Motion.div>
                   ))}
                 </div>
 
                 {/* Final Result Display */}
                 <AnimatePresence>
                   {currentRoundResult && (
-                    <motion.div
+                    <Motion.div
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       className="flex flex-col items-center"
@@ -302,7 +299,7 @@ const ColorPrediction = () => {
                       </div>
 
                       {totalWinAmount > 0 ? (
-                        <motion.div 
+                        <Motion.div 
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{ repeat: Infinity, duration: 1 }}
                           className="text-center"
@@ -312,17 +309,17 @@ const ColorPrediction = () => {
                             +₹{totalWinAmount.toFixed(0)}
                           </div>
                           <div className="text-gray-400 text-[10px] font-bold mt-1 uppercase tracking-widest">
-                            From {betsRef.current.length} active bets
+                            From {resolvedBetCount} active bets
                           </div>
-                        </motion.div>
-                      ) : betsRef.current.length > 0 ? (
+                        </Motion.div>
+                      ) : resolvedBetCount > 0 ? (
                         <div className="text-red-500 font-black text-xl uppercase opacity-50 italic">Better Luck Next Time</div>
                       ) : null}
-                    </motion.div>
+                    </Motion.div>
                   )}
                 </AnimatePresence>
               </div>
-            </motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>
       </div>

@@ -1,10 +1,8 @@
 import React from 'react';
 import { ChevronLeft, Mail, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { goBackOr } from '../lib/navigation';
 
 const Notifications = () => {
-  const navigate = useNavigate();
-
   const notificationList = [
     {
       id: 1,
@@ -49,7 +47,7 @@ const Notifications = () => {
       <div className="w-full max-w-md bg-[#1B233D] text-white relative shadow-2xl border-x border-white/5 flex flex-col min-h-screen">
         {/* Header */}
         <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md h-12 bg-[#2D4594] flex items-center px-4 z-[110]">
-          <button onClick={() => navigate(-1)} className="mr-4">
+          <button onClick={() => goBackOr('/')} className="mr-4">
             <ChevronLeft size={24} />
           </button>
           <h1 className="text-lg font-bold uppercase tracking-tight">Notification</h1>

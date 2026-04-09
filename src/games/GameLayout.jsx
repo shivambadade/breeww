@@ -1,12 +1,11 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Info } from 'lucide-react';
 import { useWallet } from '../hooks/useWallet';
 import { formatINR } from '../utils/formatCurrency';
 import BetPanel from '../components/betting/BetPanel';
+import { navigateTo } from '../lib/navigation';
 
 const GameLayout = ({ title, children, onPlaceBet, betDisabled, isWide = false, hideBetPanel = false, hideHeader = false }) => {
-  const navigate = useNavigate();
   const { balance } = useWallet();
 
   return (
@@ -17,7 +16,7 @@ const GameLayout = ({ title, children, onPlaceBet, betDisabled, isWide = false, 
           <header className="h-14 bg-[#242E4D] border-b border-white/5 flex items-center justify-between px-4 shrink-0 shadow-lg relative z-20">
             <div className="flex items-center gap-3">
               <button 
-                onClick={() => navigate('/')} 
+                onClick={() => navigateTo('/')} 
                 className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white"
               >
                 <ChevronLeft size={24} />

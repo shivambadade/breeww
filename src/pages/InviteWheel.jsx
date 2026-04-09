@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronLeft, HelpCircle, FileText } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { goBackOr } from '../lib/navigation';
 
 const InviteWheel = () => {
-  const navigate = useNavigate();
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
 
@@ -25,7 +24,7 @@ const InviteWheel = () => {
       <div className="w-full max-w-md bg-gradient-to-b from-[#FF5C38] via-[#FF3B30] to-[#E60000] text-white relative shadow-2xl border-x border-white/5 flex flex-col min-h-screen">
         {/* Header */}
         <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md h-12 bg-[#2D4594] flex items-center justify-between px-4 z-[110]">
-          <button onClick={() => navigate(-1)}>
+          <button onClick={() => goBackOr('/')}>
             <ChevronLeft size={24} />
           </button>
           <h1 className="text-lg font-bold uppercase tracking-tight">Invite Wheel</h1>

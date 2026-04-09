@@ -1,6 +1,6 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
 import { Home, Activity, CircleDollarSign, User } from 'lucide-react';
+import { isCurrentPath, pageHref } from '../../lib/navigation';
 
 const BottomNavbar = () => {
   const navItems = [
@@ -15,14 +15,14 @@ const BottomNavbar = () => {
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-[#1B233D] border-t border-white/5 pb-safe z-50">
       <div className="flex justify-around items-end h-16 pb-1">
         {navItems.map((item, idx) => (
-          <NavLink
+          <a
             key={item.path || idx}
-            to={item.path}
-            className={({ isActive }) =>
+            href={pageHref(item.path)}
+            className={
               `flex flex-col items-center justify-center transition-colors ${
                 item.isCenter ? 'relative -top-4 scale-110' : ''
               } ${
-                isActive ? 'text-[#FFD700]' : 'text-[#8C9AB5]'
+                isCurrentPath(item.path) ? 'text-[#FFD700]' : 'text-[#8C9AB5]'
               }`
             }
           >
@@ -63,7 +63,7 @@ const BottomNavbar = () => {
                 </span>
               </>
             )}
-          </NavLink>
+          </a>
         ))}
       </div>
     </nav>

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Wallet, History, Info, RotateCw } from 'lucide-react';
 import GameLayout from '../GameLayout';
 import { useWallet } from '../../hooks/useWallet';
@@ -9,7 +9,7 @@ import WheelCanvas from './WheelCanvas';
 import WheelControls from './WheelControls';
 
 const SpinWheel = () => {
-  const { balance, placeBet, addWin } = useWallet();
+  const { balance } = useWallet();
   const { addBet, clearBets } = useBets();
 
   const [risk, setRisk] = useState('medium');
@@ -58,11 +58,10 @@ const SpinWheel = () => {
   }, [segments.length]);
 
   const handleSpin = useCallback(async (amount) => {
-    if (amount <= 0 || amount > balance || isSpinning) return;
+    if (amount <= 0 || isSpinning) return;
 
-    if (placeBet(amount)) {
-      setIsSpinning(true);
-      setLastResult(null);
+    setIsSpinning(true);
+    setLastResult(null);
 
       // 1. Fetch result (Mocking API call)
       const segmentIndex = await fetchSpinResult();
@@ -81,9 +80,10 @@ const SpinWheel = () => {
 
       // 3. Record the bet
       addBet({
-        type: 'spin_wheel',
+        type: 'spin_wheel-preview',
         amount,
-        risk
+        risk,
+        source: 'frontend-preview'
       });
 
       // 4. Wait for animation
@@ -93,7 +93,6 @@ const SpinWheel = () => {
         const winAmount = amount * winMult;
 
         if (winAmount > 0) {
-          addWin(winAmount);
           setLastResult({ mult: winMult, amount: winAmount });
         } else {
           setLastResult({ mult: winMult, amount: 0 });
@@ -113,8 +112,7 @@ const SpinWheel = () => {
           setLastResult(null);
         }, 3000);
       }, 4000); // 4s duration (matching CSS/Framer transition)
-    }
-  }, [balance, isSpinning, placeBet, segments, rotation, fetchSpinResult, addBet, addWin, clearBets, risk]);
+  }, [isSpinning, segments, rotation, fetchSpinResult, addBet, clearBets, risk]);
 
   return (
     <GameLayout title="SPIN WHEEL">
@@ -131,9 +129,9 @@ const SpinWheel = () => {
               <div className="text-3xl font-black text-white">{formatINR(balance)}</div>
             </div>
           </div>
-          <button className="bg-gradient-to-b from-[#FFD700] to-[#FF8C00] px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest text-[#B30000] shadow-lg active:scale-95 transition-transform">
-            Deposit
-          </button>
+          <div className="rounded-full border border-sky-400/20 bg-sky-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-sky-200">
+            Preview Only
+          </div>
         </div>
 
         <div className="flex flex-col gap-8 items-center">
@@ -164,7 +162,7 @@ const SpinWheel = () => {
         {/* Win Notification Overlay */}
         <AnimatePresence>
           {lastResult && (
-            <motion.div
+            <Motion.div
               initial={{ scale: 0.5, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.5, opacity: 0, y: -20 }}
@@ -183,7 +181,7 @@ const SpinWheel = () => {
                   <div className="text-white/80 font-bold mt-1">{formatINR(lastResult.amount)}</div>
                 )}
               </div>
-            </motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>
 

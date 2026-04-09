@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Wallet, Info, History, Timer, ChevronDown, ChevronUp, RotateCcw, CheckCircle2 } from 'lucide-react';
 import GameLayout from '../GameLayout';
-import { useWallet } from '../../hooks/useWallet';
 import { useBets } from '../../hooks/useBets';
-import { formatINR } from '../../utils/formatCurrency';
 
 const SUM_MULTIPLIERS = {
   3: 207.36, 4: 69.12, 5: 34.56, 6: 20.74, 7: 13.83, 8: 9.88, 9: 8.3, 10: 7.68,
@@ -38,15 +36,13 @@ const DiceIcon = ({ value, className = "" }) => {
 };
 
 const Dice = () => {
-  const { balance, placeBet, addWin } = useWallet();
-  const { bets, addBet, clearBets, totalBetAmount } = useBets();
+  const { bets, addBet, clearBets } = useBets();
 
   // Local state
   const [timeLeft, setTimeLeft] = useState(30);
   const [isRolling, setIsRolling] = useState(false);
   const [diceResults, setDiceResults] = useState([1, 1, 1]);
   const [gameHistory, setGameHistory] = useState([]);
-  const [betAmount, setBetAmount] = useState('10.00');
   const [activeTab, setActiveTab] = useState('Total'); // Total, 2 same, 3 same, Different
   const [selectedBets, setSelectedBets] = useState([]); // Array of { type, value, multiplier }
   const [showBetSuccess, setShowBetSuccess] = useState(false);
@@ -59,21 +55,6 @@ const Dice = () => {
            now.getHours().toString().padStart(2, '0') + 
            now.getMinutes().toString().padStart(2, '0') + 
            "0489"; // Mock suffix
-  }, [isRolling]);
-
-  // Timer logic
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev === 1) {
-          handleReveal();
-          return 0;
-        }
-        if (prev <= 0) return 30;
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
   }, []);
 
   const handleReveal = useCallback(() => {
@@ -92,7 +73,7 @@ const Dice = () => {
       const isEven = sum % 2 === 0;
 
       // Evaluate bets
-      let totalWon = 0;
+      let _totalWon = 0;
       bets.forEach(bet => {
         let win = false;
         if (bet.type === 'sum' && bet.value === sum) win = true;
@@ -100,13 +81,9 @@ const Dice = () => {
         if (bet.type === 'parity' && bet.value === (isEven ? 'Even' : 'Odd')) win = true;
         
         if (win) {
-          totalWon += bet.amount * bet.multiplier;
+          _totalWon += bet.amount * bet.multiplier;
         }
       });
-
-      if (totalWon > 0) {
-        addWin(totalWon);
-      }
 
       setGameHistory(prev => [{
         id: Date.now(),
@@ -121,19 +98,33 @@ const Dice = () => {
       clearBets();
       setTimeLeft(30);
     }, 2000);
-  }, [bets, periodId, addWin, clearBets]);
+  }, [bets, periodId, clearBets]);
+
+  // Timer logic
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev === 1) {
+          handleReveal();
+          return 0;
+        }
+        if (prev <= 0) return 30;
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [handleReveal]);
 
   const handlePlaceBet = (amount) => {
-    if (amount <= 0 || amount > balance) return;
+    if (amount <= 0) return;
     if (selectedBets.length === 0) return;
 
     selectedBets.forEach(bet => {
-      if (placeBet(amount)) {
-        addBet({
-          ...bet,
-          amount
-        });
-      }
+      addBet({
+        ...bet,
+        amount,
+        source: 'frontend-preview'
+      });
     });
     setSelectedBets([]);
     setShowBetSuccess(true);
@@ -160,6 +151,9 @@ const Dice = () => {
               <span className="text-gray-500 text-[10px] font-bold uppercase">Period</span>
               <span className="text-white font-black text-sm">{periodId}</span>
             </div>
+            <div className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-sky-200">
+              Preview
+            </div>
             <div className="flex flex-col items-end">
               <span className="text-gray-500 text-[10px] font-bold uppercase">Time remaining</span>
               <div className="flex gap-1">
@@ -182,10 +176,10 @@ const Dice = () => {
             {/* Slot-like frame */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/20 pointer-events-none" />
             <div className="flex items-center gap-4">
-              <AnimatePresence mode="wait">
+              <AnimatePresence initial={false} mode="sync">
                 {diceResults.map((val, i) => (
-                  <motion.div
-                    key={`${i}-${val}-${isRolling}`}
+                    <Motion.div
+                      key={`${i}-${val}-${isRolling}`}
                     initial={isRolling ? { y: -20, opacity: 0 } : { y: 0, opacity: 1 }}
                     animate={isRolling ? { 
                       y: [0, -50, 50, 0], 
@@ -198,8 +192,8 @@ const Dice = () => {
                       ease: "linear" 
                     } : { duration: 0.5, type: 'spring' }}
                   >
-                    <DiceIcon value={isRolling ? Math.floor(Math.random() * 6) + 1 : val} />
-                  </motion.div>
+                      <DiceIcon value={isRolling ? ((i % 6) + 1) : val} />
+                  </Motion.div>
                 ))}
               </AnimatePresence>
             </div>
@@ -331,7 +325,7 @@ const Dice = () => {
         {/* Bet Success Toast */}
         <AnimatePresence>
           {showBetSuccess && (
-            <motion.div
+            <Motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.5, opacity: 0 }}
@@ -341,7 +335,7 @@ const Dice = () => {
                 <CheckCircle2 size={24} />
                 Bet placed successfully
               </div>
-            </motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>
 

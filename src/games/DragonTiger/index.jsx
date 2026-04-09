@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Wallet, Info, History, CheckCircle2, Timer } from 'lucide-react';
 import GameLayout from '../GameLayout';
 import { useWallet } from '../../hooks/useWallet';
@@ -7,8 +7,8 @@ import { useBets } from '../../hooks/useBets';
 import { formatINR } from '../../utils/formatCurrency';
 
 const DragonTiger = () => {
-  const { balance, placeBet, addWin } = useWallet();
-  const { bets, addBet, clearBets, totalBetAmount } = useBets();
+  const { balance } = useWallet();
+  const { bets, addBet, clearBets } = useBets();
 
   // Local state
   const [timeLeft, setTimeLeft] = useState(30);
@@ -57,19 +57,6 @@ const DragonTiger = () => {
       setGameHistory(prev => [currentResult, ...prev].slice(0, 10));
 
       // 3. Evaluate Bets
-      const currentBets = betsRef.current;
-      let totalWon = 0;
-
-      currentBets.forEach(bet => {
-        if (bet.value === winner) {
-          totalWon += bet.amount * bet.multiplier;
-        }
-      });
-
-      if (totalWon > 0) {
-        addWin(totalWon);
-      }
-
       // 4. Reset for next round
       setTimeout(() => {
         setIsDealing(false);
@@ -79,7 +66,7 @@ const DragonTiger = () => {
         setTimeLeft(30);
       }, 4000);
     }, 2000);
-  }, [addWin, clearBets]);
+  }, [clearBets]);
 
   // Timer logic
   useEffect(() => {
@@ -98,14 +85,12 @@ const DragonTiger = () => {
 
   const handleBetClick = (amount) => {
     if (!selectedBet) return;
-    if (amount <= 0 || amount > balance) return;
+    if (amount <= 0) return;
     if (timeLeft <= 3) return;
 
-    if (placeBet(amount)) {
-      addBet({ ...selectedBet, amount });
-      setShowBetSuccess(true);
-      setTimeout(() => setShowBetSuccess(false), 2000);
-    }
+    addBet({ ...selectedBet, amount, source: 'frontend-preview' });
+    setShowBetSuccess(true);
+    setTimeout(() => setShowBetSuccess(false), 2000);
   };
 
   const isBettingDisabled = timeLeft <= 3 || isDealing;
@@ -127,6 +112,9 @@ const DragonTiger = () => {
                 </div>
               ))}
             </div>
+          </div>
+          <div className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-sky-200">
+            Preview
           </div>
           
           <div className="flex flex-col items-end relative z-10">
@@ -181,14 +169,14 @@ const DragonTiger = () => {
           <div className="flex justify-between items-center w-full gap-4 mt-8 relative z-10">
             {/* Dragon Side */}
             <div className="flex-1 flex flex-col items-center gap-6">
-              <motion.div 
+              <Motion.div 
                 animate={result?.winner === 'dragon' ? { scale: [1, 1.1, 1] } : {}}
                 className={`text-4xl font-black italic tracking-tighter uppercase transition-colors ${
                   result?.winner === 'dragon' ? 'text-red-400' : 'text-red-600'
                 }`}
               >
                 DRAGON
-              </motion.div>
+              </Motion.div>
               <Card 
                 card={result?.dragon} 
                 isDealing={isDealing && !result} 
@@ -199,26 +187,26 @@ const DragonTiger = () => {
 
             {/* VS Middle */}
             <div className="relative flex items-center justify-center">
-               <motion.div
+               <Motion.div
                  animate={isDealing ? { rotate: 360 } : {}}
                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                  className="text-4xl font-black text-gray-700 italic z-10"
                >
                  VS
-               </motion.div>
+               </Motion.div>
                <div className="absolute w-20 h-20 bg-white/5 rounded-full blur-xl"></div>
             </div>
 
             {/* Tiger Side */}
             <div className="flex-1 flex flex-col items-center gap-6">
-              <motion.div 
+              <Motion.div 
                 animate={result?.winner === 'tiger' ? { scale: [1, 1.1, 1] } : {}}
                 className={`text-4xl font-black italic tracking-tighter uppercase transition-colors ${
                   result?.winner === 'tiger' ? 'text-yellow-400' : 'text-yellow-500'
                 }`}
               >
                 TIGER
-              </motion.div>
+              </Motion.div>
               <Card 
                 card={result?.tiger} 
                 isDealing={isDealing && !result} 
@@ -231,7 +219,7 @@ const DragonTiger = () => {
           {/* Result Overlay */}
           <AnimatePresence>
             {result && (
-              <motion.div 
+              <Motion.div 
                 initial={{ y: 50, opacity: 0, scale: 0.5 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
                 exit={{ y: 50, opacity: 0, scale: 0.5 }}
@@ -242,7 +230,7 @@ const DragonTiger = () => {
                 }`}
               >
                 {result.winner === 'tie' ? 'Tie!' : `${result.winner} Wins!`}
-              </motion.div>
+              </Motion.div>
             )}
           </AnimatePresence>
         </div>
@@ -316,7 +304,7 @@ const DragonTiger = () => {
         {/* Success Toast */}
         <AnimatePresence>
           {showBetSuccess && (
-            <motion.div
+            <Motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.5, opacity: 0 }}
@@ -326,7 +314,7 @@ const DragonTiger = () => {
                 <CheckCircle2 size={24} />
                 Bet placed successfully
               </div>
-            </motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>
       </div>
@@ -347,7 +335,7 @@ const Card = ({ card, isDealing, isWinner, side }) => {
 
   return (
     <div className="relative w-32 h-48">
-      <motion.div
+      <Motion.div
         animate={{ 
           rotateY: card ? 180 : 0,
           scale: isWinner ? 1.1 : 1,
@@ -394,18 +382,18 @@ const Card = ({ card, isDealing, isWinner, side }) => {
             </>
           )}
         </div>
-      </motion.div>
+      </Motion.div>
       
       {/* Dealing Animation Overlay */}
       {isDealing && (
-        <motion.div
+        <Motion.div
           initial={{ y: -400, x: side === 'dragon' ? 100 : -100, opacity: 0, rotate: 45 }}
           animate={{ y: 0, x: 0, opacity: 1, rotate: 0 }}
           transition={{ duration: 0.5, delay: side === 'tiger' ? 0.3 : 0 }}
           className="absolute inset-0 z-10 pointer-events-none rounded-2xl bg-gradient-to-br from-[#1e254a] to-[#0B0F2A] border-2 border-casino-accent/40 flex items-center justify-center"
         >
            <span className="text-casino-accent font-black text-2xl italic">B</span>
-        </motion.div>
+        </Motion.div>
       )}
     </div>
   );

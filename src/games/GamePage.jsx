@@ -1,11 +1,9 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Maximize2, Info, Settings } from 'lucide-react';
+import { navigateTo } from '../lib/navigation';
 
-const GamePage = ({ name }) => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const gameName = name || id?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+const GamePage = ({ name = 'Game' }) => {
+  const gameName = name;
 
   return (
     <div className="fixed inset-0 z-[60] bg-casino-dark flex flex-col">
@@ -13,7 +11,7 @@ const GamePage = ({ name }) => {
       <header className="h-14 bg-casino-card border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => navigate('/')} 
+            onClick={() => navigateTo('/')} 
             className="p-1 hover:bg-white/10 rounded-lg transition-colors"
           >
             <ChevronLeft size={24} />

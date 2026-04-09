@@ -8,8 +8,8 @@ import {
   Smartphone,
   UserRoundPlus,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import AuthShell from '../components/auth/AuthShell';
+import { pageHref } from '../lib/navigation';
 
 const methodOptions = [
   { id: 'phone', label: 'Phone number', icon: Smartphone, prefix: '+91' },
@@ -20,17 +20,20 @@ const agreementLabel = 'I have read and agree';
 
 const AuthField = ({
   label,
-  icon: Icon,
+  icon,
   type = 'text',
   placeholder,
   value,
   onChange,
   rightSlot,
   prefix,
-}) => (
+}) => {
+  const IconComponent = icon;
+
+  return (
   <label className="block">
     <div className="mb-3 flex items-center gap-2 text-[1.55rem] font-medium text-white">
-      <Icon size={18} className="text-[#58acff]" />
+      <IconComponent size={18} className="text-[#58acff]" />
       <span className="text-lg">{label}</span>
     </div>
     <div className="flex gap-3">
@@ -53,7 +56,8 @@ const AuthField = ({
       </div>
     </div>
   </label>
-);
+  );
+};
 
 const Register = () => {
   const [method, setMethod] = useState('phone');
@@ -144,9 +148,9 @@ const Register = () => {
       <label className="mt-1 flex items-center gap-3 text-sm text-blue-50/80">
         <input type="checkbox" className="auth-checkbox" />
         <span>{agreementLabel}</span>
-        <Link to="/" className="text-red-400 transition hover:text-red-300">
+        <a href={pageHref('/')} className="text-red-400 transition hover:text-red-300">
           [Privacy Agreement]
-        </Link>
+        </a>
       </label>
 
       <button

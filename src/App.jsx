@@ -18,6 +18,8 @@ import SpinWheel from './games/SpinWheel';
 import Dice from './games/Dice';
 import DragonTiger from './games/DragonTiger';
 import Plinko from './games/Plinko';
+import Poker from './games/Poker';
+import ChamberRisk from './games/ChamberRisk';
 
 function App() {
   return (
@@ -45,6 +47,8 @@ function App() {
         <Route path="/game/dice" element={<Dice />} />
         <Route path="/game/dragon-tiger" element={<DragonTiger />} />
         <Route path="/game/plinko" element={<Plinko />} />
+        <Route path="/game/poker" element={<Poker />} />
+        <Route path="/game/chamber-risk" element={<ChamberRisk />} />
       </Routes>
     </BrowserRouter>
   );

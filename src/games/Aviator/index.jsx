@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, Menu } from 'lucide-react';
 import GameLayout from '../GameLayout';
 import { useWallet } from '../../hooks/useWallet';
@@ -11,7 +11,7 @@ import AviatorHistory from './AviatorHistory';
 import AviatorSidebar from './AviatorSidebar';
 
 const Aviator = () => {
-  const { balance, placeBet, addWin } = useWallet();
+  const { balance } = useWallet();
   const { addBet } = useBets();
 
   // Game States
@@ -33,20 +33,16 @@ const Aviator = () => {
   const [hasCashedOut, setHasCashedOut] = useState(false);
   const [isBetPlaced, setIsBetPlaced] = useState(false);
   const [showBetSuccess, setShowBetSuccess] = useState(false);
-  const [allBets, setAllBets] = useState([]);
-
-  // Mock initial bets
-  useEffect(() => {
+  const [allBets, setAllBets] = useState(() => {
     const mockUsers = ['f***3', 'q***4', 'z***9', 's***1', 's***1', 'x***8', 'd***6', 'w***2'];
-    const initialBets = mockUsers.map((user, i) => ({
+    return mockUsers.map((user, i) => ({
       id: i,
       user,
       amount: Math.floor(Math.random() * 5000) + 1000,
       hasCashedOut: i === 3,
       cashoutMult: i === 3 ? 1.01 : 0
     }));
-    setAllBets(initialBets);
-  }, []);
+  });
 
   // Game Loop Simulation
   useEffect(() => {
@@ -59,6 +55,7 @@ const Aviator = () => {
         
         if (newMultiplier >= crashAt) {
           setMultiplier(crashAt);
+          setHistory(prev => [{ id: Date.now(), multiplier: crashAt }, ...prev].slice(0, 20));
           setGameState('crashed');
           clearInterval(interval);
         } else {
@@ -75,11 +72,6 @@ const Aviator = () => {
     }
 
     if (gameState === 'waiting') {
-      setMultiplier(1.0);
-      setHasCashedOut(false);
-      setIsBetPlaced(false);
-      setAllBets(prev => prev.map(bet => ({ ...bet, hasCashedOut: false, cashoutMult: 0 })));
-      
       const timer = setTimeout(() => {
         const r = Math.random();
         const crash = 0.99 / (1 - r);
@@ -90,8 +82,11 @@ const Aviator = () => {
     }
 
     if (gameState === 'crashed') {
-      setHistory(prev => [{ id: Date.now(), multiplier }, ...prev].slice(0, 20));
       const timer = setTimeout(() => {
+        setMultiplier(1.0);
+        setHasCashedOut(false);
+        setIsBetPlaced(false);
+        setAllBets(prev => prev.map(bet => ({ ...bet, hasCashedOut: false, cashoutMult: 0 })));
         setGameState('waiting');
       }, 4000);
       return () => clearTimeout(timer);
@@ -103,20 +98,16 @@ const Aviator = () => {
   const handlePlaceBet = useCallback((amount) => {
     if (gameState !== 'waiting' && gameState !== 'running') return;
     if (isBetPlaced) return;
-    if (amount <= 0 || amount > balance) return;
+    if (amount <= 0) return;
 
-    if (placeBet(amount)) {
-      setIsBetPlaced(true);
-      setShowBetSuccess(true);
-      setTimeout(() => setShowBetSuccess(false), 2000);
-      addBet({ type: 'aviator', amount, target: 'crash' });
-    }
-  }, [gameState, isBetPlaced, balance, placeBet, addBet]);
+    setIsBetPlaced(true);
+    setShowBetSuccess(true);
+    setTimeout(() => setShowBetSuccess(false), 2000);
+    addBet({ type: 'aviator-preview', amount, target: 'crash', source: 'frontend-preview' });
+  }, [gameState, isBetPlaced, addBet]);
 
   const handleCashout = useCallback(() => {
     if (gameState === 'running' && isBetPlaced && !hasCashedOut) {
-      const winAmount = betAmount * multiplier;
-      addWin(winAmount);
       setHasCashedOut(true);
       setAllBets(prev => [{
         id: 'me',
@@ -126,7 +117,7 @@ const Aviator = () => {
         cashoutMult: multiplier
       }, ...prev]);
     }
-  }, [gameState, isBetPlaced, hasCashedOut, betAmount, multiplier, addWin]);
+  }, [gameState, isBetPlaced, hasCashedOut, betAmount, multiplier]);
 
   return (
     <GameLayout title="AVIATOR" isWide={true} hideBetPanel={true} hideHeader={true}>
@@ -139,6 +130,9 @@ const Aviator = () => {
               <HelpCircle size={14} className="border-2 border-black rounded-full p-0.5" />
               How to play?
             </button>
+            <div className="hidden sm:flex items-center rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-sky-200">
+              Frontend Preview
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -193,7 +187,7 @@ const Aviator = () => {
       {/* Overlays */}
       <AnimatePresence>
         {showBetSuccess && (
-          <motion.div
+          <Motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.5, opacity: 0 }}
@@ -202,13 +196,13 @@ const Aviator = () => {
             <div className="bg-[#28a745] px-10 py-5 rounded-2xl shadow-[0_0_50px_rgba(40,167,69,0.5)] font-black text-white uppercase tracking-widest border border-green-400">
               Bet Placed Successfully
             </div>
-          </motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {hasCashedOut && (
-          <motion.div
+          <Motion.div
             initial={{ scale: 0.5, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.5, opacity: 0, y: -20 }}
@@ -223,7 +217,7 @@ const Aviator = () => {
                 {formatINR(betAmount * multiplier)}
               </div>
             </div>
-          </motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
     </GameLayout>

@@ -1,13 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Play } from 'lucide-react';
-
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
+import { pageHref } from '../../lib/navigation';
 
 const GameCard = ({ game }) => {
   return (
-    <Link 
-      to={game.path} 
+    <a 
+      href={pageHref(game.path)} 
       className="group relative bg-[#141A3C] rounded-2xl overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_15px_30px_rgba(99,102,241,0.4)] focus:outline-none"
     >
       <div className="aspect-[3/4] overflow-hidden relative">
@@ -23,7 +22,7 @@ const GameCard = ({ game }) => {
         {/* Floating Coins on Card (Randomized for variety) */}
         <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
           {[...Array(3)].map((_, i) => (
-            <motion.span
+            <Motion.span
               key={i}
               animate={{ 
                 y: [0, -40],
@@ -39,7 +38,7 @@ const GameCard = ({ game }) => {
               className="absolute text-lg bottom-10 left-1/2 -translate-x-1/2 z-20"
             >
               🪙
-            </motion.span>
+            </Motion.span>
           ))}
         </div>
 
@@ -62,7 +61,7 @@ const GameCard = ({ game }) => {
           <span className="text-[10px] text-gray-500 font-medium">Live Now</span>
         </div>
       </div>
-    </Link>
+    </a>
   );
 };
 

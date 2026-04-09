@@ -1,9 +1,7 @@
 import { Bell } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { navigateTo } from '../../lib/navigation';
 
 const Header = () => {
-  const navigate = useNavigate();
-
   return (
     <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md h-12 bg-[#1B233D] flex items-center justify-between px-4 shrink-0 z-[100] border-b border-white/5">
       <div className="flex items-center">
@@ -14,7 +12,7 @@ const Header = () => {
 
       <div className="flex items-center gap-3">
         <button 
-          onClick={() => navigate('/notifications')}
+          onClick={() => navigateTo('/notifications')}
           className="text-gray-400 hover:text-white transition-colors relative"
         >
           <Bell size={24} />

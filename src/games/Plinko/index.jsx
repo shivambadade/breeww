@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Wallet, History, CheckCircle2, Info } from 'lucide-react';
 import GameLayout from '../GameLayout';
 import { useWallet } from '../../hooks/useWallet';
@@ -9,7 +9,7 @@ import PlinkoBoard from './PlinkoBoard';
 import PlinkoControls from './PlinkoControls';
 
 const Plinko = () => {
-  const { balance, placeBet, addWin } = useWallet();
+  const { balance } = useWallet();
   const { addBet, clearBets } = useBets();
   const boardRef = useRef(null);
 
@@ -49,23 +49,21 @@ const Plinko = () => {
   }, [rows, risk]);
 
   const handleDropBall = useCallback((amount) => {
-    if (amount <= 0 || amount > balance) return;
+    if (amount <= 0) return;
 
-    if (placeBet(amount)) {
-      boardRef.current.dropBall();
-      addBet({
-        type: 'plinko',
-        amount,
-        risk,
-        rows,
-      });
-    }
-  }, [balance, risk, rows, placeBet, addBet]);
+    boardRef.current.dropBall();
+    addBet({
+      type: 'plinko-preview',
+      amount,
+      risk,
+      rows,
+      source: 'frontend-preview'
+    });
+  }, [risk, rows, addBet]);
 
-  const handleBallLand = useCallback((multiplier, slotIndex) => {
+  const handleBallLand = useCallback((multiplier) => {
     const winAmount = betAmount * multiplier;
     if (winAmount > 0) {
-      addWin(winAmount);
       setLastWin(winAmount);
       setTimeout(() => setLastWin(null), 3000);
     }
@@ -84,7 +82,7 @@ const Plinko = () => {
 
     // Cleanup bets after some time
     setTimeout(() => clearBets(), 2000);
-  }, [betAmount, risk, rows, addWin, clearBets]);
+  }, [betAmount, risk, rows, clearBets]);
 
   return (
     <GameLayout title="PLINKO" isWide={true}>
@@ -101,9 +99,9 @@ const Plinko = () => {
               <div className="text-3xl font-black text-white">{formatINR(balance)}</div>
             </div>
           </div>
-          <button className="bg-indigo-600 px-10 py-4 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-indigo-600/20 active:scale-95">
-            Deposit
-          </button>
+          <div className="rounded-full border border-sky-400/20 bg-sky-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-sky-200">
+            Preview Only
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,0.8fr] gap-8">
@@ -136,7 +134,7 @@ const Plinko = () => {
         {/* Win Notification Overlay */}
         <AnimatePresence>
           {lastWin && (
-            <motion.div
+            <Motion.div
               initial={{ scale: 0.5, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.5, opacity: 0, y: -20 }}
@@ -148,7 +146,7 @@ const Plinko = () => {
                   {formatINR(lastWin)}
                 </div>
               </div>
-            </motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>
 
