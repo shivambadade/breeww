@@ -16,5 +16,6 @@ export const GAMES = [
   { id: 'dragon-tiger', name: 'Dragon Tiger', category: 'live', image: 'https://placehold.co/300x400/141A3C/ffffff?text=Dragon+Tiger', path: '/game/dragon-tiger' },
   { id: 'plinko', name: 'Plinko', category: 'originals', image: 'https://placehold.co/300x400/141A3C/ffffff?text=Plinko', path: '/game/plinko' },
   { id: 'poker', name: 'Poker', category: 'table', image: 'https://placehold.co/300x400/141A3C/ffffff?text=Poker', path: '/game/poker' },
+  { id: 'roulette', name: 'Roulette', category: 'table', image: 'https://placehold.co/300x400/141A3C/ffffff?text=Roulette', path: '/game/roulette' },
   { id: 'chamber-risk', name: 'Chamber Risk', category: 'originals', image: 'https://placehold.co/300x400/141A3C/ffffff?text=Chamber+Risk', path: '/game/chamber-risk' },
 ];

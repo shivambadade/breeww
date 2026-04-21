@@ -1,124 +1,195 @@
 import React from 'react';
-import { motion as Motion } from 'framer-motion';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
 
-const chamberPositions = [
-  'left-1/2 top-3 -translate-x-1/2',
-  'right-[12%] top-[23%]',
-  'right-[14%] bottom-[22%]',
-  'left-1/2 bottom-3 -translate-x-1/2',
-  'left-[14%] bottom-[22%]',
-  'left-[12%] top-[23%]',
+const burstParticles = Array.from({ length: 12 }, (_, index) => ({
+  id: `burst-${index}`,
+  angle: (index / 12) * Math.PI * 2,
+  distance: 18 + (index % 3) * 12,
+}));
+
+const sideLabels = [
+  { id: 'label-a', title: 'Safe', subtitle: 'Reveal' },
+  { id: 'label-b', title: 'Risk', subtitle: 'Core' },
+  { id: 'label-c', title: 'Cash', subtitle: 'Out' },
 ];
-
-const chamberMotion = {
-  idle: { scale: 1, boxShadow: '0 0 0 rgba(34,211,238,0)' },
-  active: {
-    scale: [1, 1.08, 1],
-    boxShadow: [
-      '0 0 0 rgba(59,130,246,0)',
-      '0 0 35px rgba(59,130,246,0.4)',
-      '0 0 16px rgba(59,130,246,0.18)',
-    ],
-    transition: { duration: 0.9, repeat: Infinity, ease: 'easeInOut' },
-  },
-  safe: {
-    scale: [1, 1.12, 1],
-    boxShadow: [
-      '0 0 0 rgba(16,185,129,0)',
-      '0 0 45px rgba(16,185,129,0.55)',
-      '0 0 22px rgba(16,185,129,0.22)',
-    ],
-    transition: { duration: 0.75, ease: 'easeOut' },
-  },
-  lose: {
-    x: [0, -8, 8, -6, 6, 0],
-    scale: [1, 1.08, 0.98, 1],
-    boxShadow: [
-      '0 0 0 rgba(244,63,94,0)',
-      '0 0 48px rgba(244,63,94,0.6)',
-      '0 0 24px rgba(244,63,94,0.22)',
-    ],
-    transition: { duration: 0.7, ease: 'easeInOut' },
-  },
-};
 
 const ChamberBoard = ({
   selectedChamber,
   revealedChamber,
-  isAnimating,
-  outcome,
+  safeChambers,
+  phase,
+  cycle,
   onSelectChamber,
   disabled,
 }) => {
+  const chamberCells = Array.from({ length: 6 }, (_, index) => index + 1);
+  const boardRotation =
+    phase === 'rotating' || phase === 'reveal'
+      ? [0, cycle % 2 === 0 ? 12 : -12, cycle % 2 === 0 ? -4 : 4, 0]
+      : 0;
+
   return (
-    <div className="relative overflow-hidden rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,26,60,0.95),rgba(11,15,42,0.92))] p-4 shadow-[0_20px_80px_rgba(18,24,67,0.4)] sm:p-6">
-      <div className="absolute inset-x-12 top-2 h-24 rounded-full bg-sky-400/10 blur-3xl" />
-      <div className="text-center">
-        <div className="text-[10px] font-black uppercase tracking-[0.4em] text-sky-100/55">Chamber Board</div>
-        <h2 className="mt-1 text-xl font-black text-white sm:text-2xl">Choose your next chamber</h2>
-        <p className="mt-2 text-sm font-semibold text-white/55">Tap a chamber, then advance the round when you are ready.</p>
-      </div>
+    <div className="relative overflow-hidden rounded-[32px] border border-[#c8a86a]/18 bg-[linear-gradient(180deg,#101010_0%,#060606_100%)] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.45)] sm:p-5">
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-[radial-gradient(circle_at_bottom,_rgba(249,115,22,0.18),transparent_70%)]" />
+      <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.05),transparent_70%)]" />
 
-      <div className="relative mx-auto mt-5 aspect-square w-full max-w-[420px] sm:max-w-[500px]">
-        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.22),transparent_38%),linear-gradient(180deg,rgba(31,41,84,0.55),rgba(10,15,42,0.92))] shadow-[inset_0_0_60px_rgba(59,130,246,0.16),0_0_60px_rgba(76,29,149,0.15)]" />
-        <div className="absolute inset-[10%] rounded-full border border-white/10 bg-[radial-gradient(circle_at_center,_rgba(15,23,42,0.24),rgba(5,8,26,0.9)_75%)] shadow-[inset_0_0_50px_rgba(0,0,0,0.35)]" />
-        <Motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-[18%] rounded-full border border-dashed border-sky-300/15"
-        />
-        <Motion.div
-          animate={{ rotate: -360 }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-[28%] rounded-full border border-violet-300/10"
-        />
+      <div className="relative rounded-[28px] border border-white/6 bg-[linear-gradient(180deg,#0b0b0c_0%,#090909_100%)] p-3 sm:p-4">
+        <div className="rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,#141414_0%,#0b0b0b_100%)] px-4 py-3 text-center">
+          <div className="text-sm font-black uppercase tracking-[0.28em] text-white">Place Your Bets</div>
+          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.28em] text-[#c8a86a]/75">
+            {phase === 'rotating'
+              ? 'Rotating chambers'
+              : phase === 'reveal'
+                ? 'Reveal in progress'
+                : 'Choose a chamber'}
+          </div>
+        </div>
 
-        {chamberPositions.map((positionClass, index) => {
-          const chamberNumber = index + 1;
-          const isSelected = selectedChamber === chamberNumber;
-          const isRevealed = revealedChamber === chamberNumber;
-          const currentVariant = !isRevealed
-            ? isSelected && isAnimating
-              ? 'active'
-              : 'idle'
-            : outcome === 'lose'
-              ? 'lose'
-              : 'safe';
-
-          return (
-            <Motion.button
-              key={chamberNumber}
-              type="button"
-              onClick={() => onSelectChamber(chamberNumber)}
-              disabled={disabled}
-              variants={chamberMotion}
-              animate={currentVariant}
-              whileHover={!disabled ? { scale: 1.06 } : undefined}
-              whileTap={!disabled ? { scale: 0.97 } : undefined}
-              className={`absolute ${positionClass} flex h-20 w-20 items-center justify-center rounded-full border text-white transition-colors focus:outline-none focus:ring-2 focus:ring-sky-300/70 focus:ring-offset-2 focus:ring-offset-[#0B0F2A] sm:h-24 sm:w-24 ${
-                isRevealed && outcome === 'lose'
-                  ? 'border-rose-300/60 bg-[radial-gradient(circle_at_top,_rgba(251,113,133,0.48),rgba(136,19,55,0.9))]'
-                  : isRevealed
-                    ? 'border-emerald-300/60 bg-[radial-gradient(circle_at_top,_rgba(110,231,183,0.45),rgba(6,78,59,0.88))]'
-                    : isSelected
-                      ? 'border-violet-300/55 bg-[radial-gradient(circle_at_top,_rgba(192,132,252,0.4),rgba(30,41,59,0.92))] shadow-[0_0_30px_rgba(168,85,247,0.22)]'
-                      : 'border-sky-300/25 bg-[radial-gradient(circle_at_top,_rgba(96,165,250,0.3),rgba(30,41,59,0.88))] hover:border-sky-300/45'
-              }`}
-            >
-              <div className="absolute inset-1 rounded-full border border-white/15" />
-              <div className="relative text-center">
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/55">Slot</div>
-                <div className="text-2xl font-black sm:text-3xl">{chamberNumber}</div>
+        <div className="mt-4 grid gap-3 lg:grid-cols-[78px_minmax(0,1fr)]">
+          <div className="grid grid-cols-3 gap-2 lg:grid-cols-1">
+            {sideLabels.map((item) => (
+              <div
+                key={item.id}
+                className="flex min-h-[74px] items-center justify-center rounded-[18px] border border-white/8 bg-[linear-gradient(180deg,rgba(45,45,46,0.96),rgba(24,24,24,0.96))] px-2 text-center"
+              >
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[#c8a86a]/80">{item.title}</div>
+                  <div className="mt-1 text-xs font-black uppercase tracking-[0.14em] text-white/80">{item.subtitle}</div>
+                </div>
               </div>
-            </Motion.button>
-          );
-        })}
+            ))}
+          </div>
 
-        <div className="absolute left-1/2 top-1/2 flex h-[34%] w-[34%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[radial-gradient(circle_at_top,_rgba(96,165,250,0.2),rgba(15,23,42,0.95))] shadow-[0_0_40px_rgba(59,130,246,0.12)]">
-          <div className="text-center">
-            <div className="text-[10px] font-black uppercase tracking-[0.34em] text-sky-100/60">Core</div>
-            <div className="mt-2 text-base font-black text-white sm:text-lg">Risk Engine</div>
-            <div className="mt-1 text-xs font-semibold text-white/50">6 chambers</div>
+          <div className="space-y-3">
+            <div className="rounded-[18px] border border-emerald-400/25 bg-[linear-gradient(180deg,rgba(76,132,47,0.92),rgba(52,94,32,0.92))] px-4 py-3 text-center">
+              <div className="text-[10px] font-black uppercase tracking-[0.28em] text-emerald-50/80">Survival Lane</div>
+              <div className="mt-1 text-sm font-black uppercase tracking-[0.18em] text-white">
+                {phase === 'reveal' ? 'Safe chambers glowing' : 'Advance to reveal the dead chamber'}
+              </div>
+            </div>
+
+            <Motion.div
+              animate={{ rotate: boardRotation, scale: phase === 'rotating' ? [1, 1.01, 1] : 1 }}
+              transition={{ duration: phase === 'rotating' ? 1.15 : 0.45, ease: 'easeInOut' }}
+              className="grid grid-cols-3 gap-2 sm:gap-3"
+            >
+              {chamberCells.map((chamberNumber) => {
+                const isSelected = selectedChamber === chamberNumber;
+                const isLosingChamber = revealedChamber === chamberNumber;
+                const isSafeChamber = safeChambers.includes(chamberNumber);
+                const baseTone =
+                  chamberNumber % 2 === 1
+                    ? 'bg-[linear-gradient(180deg,#b11d34_0%,#8e1527_100%)]'
+                    : 'bg-[linear-gradient(180deg,#242427_0%,#171719_100%)]';
+
+                return (
+                  <Motion.button
+                    key={chamberNumber}
+                    type="button"
+                    onClick={() => onSelectChamber(chamberNumber)}
+                    disabled={disabled}
+                    animate={
+                      isLosingChamber
+                        ? {
+                            scale: [1, 1.05, 0.98, 1],
+                            x: [0, -7, 7, -5, 5, 0],
+                            boxShadow: [
+                              '0 0 0 rgba(248,113,113,0)',
+                              '0 0 34px rgba(248,113,113,0.55)',
+                              '0 0 12px rgba(127,29,29,0.45)',
+                            ],
+                          }
+                        : isSafeChamber
+                          ? {
+                              scale: [1, 1.04, 1],
+                              boxShadow: [
+                                '0 0 0 rgba(52,211,153,0)',
+                                '0 0 34px rgba(52,211,153,0.45)',
+                                '0 0 12px rgba(22,163,74,0.25)',
+                              ],
+                            }
+                          : phase === 'rotating'
+                            ? {
+                                scale: [1, 1.03, 1],
+                                boxShadow: [
+                                  '0 0 0 rgba(200,168,106,0)',
+                                  '0 0 24px rgba(200,168,106,0.28)',
+                                  '0 0 0 rgba(200,168,106,0)',
+                                ],
+                              }
+                            : isSelected
+                              ? {
+                                  scale: [1, 1.02, 1],
+                                  boxShadow: [
+                                    '0 0 0 rgba(200,168,106,0.16)',
+                                    '0 0 22px rgba(200,168,106,0.32)',
+                                    '0 0 0 rgba(200,168,106,0.16)',
+                                  ],
+                                }
+                              : { scale: 1 }
+                    }
+                    transition={{
+                      duration: isLosingChamber ? 0.68 : isSafeChamber ? 0.72 : 1.5,
+                      repeat: isSelected && !isLosingChamber && !isSafeChamber && phase === 'selection' ? Infinity : 0,
+                      ease: 'easeInOut',
+                    }}
+                    whileHover={!disabled ? { y: -2, scale: 1.02 } : undefined}
+                    whileTap={!disabled ? { scale: 0.98 } : undefined}
+                    className={`relative min-h-[118px] overflow-hidden rounded-[18px] border text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#d5b06b]/70 focus:ring-offset-2 focus:ring-offset-black sm:min-h-[132px] ${
+                      isLosingChamber
+                        ? 'border-rose-300/70 bg-[linear-gradient(180deg,#ce3048_0%,#731321_100%)]'
+                        : isSafeChamber
+                          ? 'border-emerald-300/60 bg-[linear-gradient(180deg,#3a7b30_0%,#234c1e_100%)]'
+                          : isSelected
+                            ? 'border-[#d5b06b]/70'
+                            : 'border-white/10'
+                    } ${!isLosingChamber && !isSafeChamber ? baseTone : ''}`}
+                  >
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),transparent_55%)]" />
+                    <div className="absolute inset-x-0 bottom-0 h-12 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.32))]" />
+                    <div className="absolute inset-0 border border-white/10" />
+                    {isSelected && !isLosingChamber && (
+                      <div className="absolute inset-0 border-2 border-[#d5b06b]/70 shadow-[inset_0_0_0_1px_rgba(213,176,107,0.28)]" />
+                    )}
+
+                    <div className="relative flex h-full flex-col items-center justify-center px-3 text-center">
+                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/65">
+                        {isLosingChamber ? 'Lose' : isSafeChamber ? 'Safe' : 'Chamber'}
+                      </div>
+                      <div className="mt-2 text-4xl font-black sm:text-5xl">{chamberNumber}</div>
+                      <div className="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">
+                        {isSelected ? 'Selected' : 'Tap to arm'}
+                      </div>
+                    </div>
+
+                    <AnimatePresence>
+                      {isLosingChamber &&
+                        burstParticles.map((particle) => (
+                          <Motion.span
+                            key={particle.id}
+                            initial={{ opacity: 0, x: 0, y: 0, scale: 0.35 }}
+                            animate={{
+                              opacity: [0, 1, 0],
+                              x: Math.cos(particle.angle) * particle.distance,
+                              y: Math.sin(particle.angle) * particle.distance,
+                              scale: [0.35, 1, 0.45],
+                            }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.65, ease: 'easeOut' }}
+                            className="absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-[#ffd38a]"
+                          />
+                        ))}
+                    </AnimatePresence>
+                  </Motion.button>
+                );
+              })}
+            </Motion.div>
+
+            <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-black uppercase tracking-[0.18em] text-white/60">
+              <div className="rounded-[16px] border border-white/8 bg-[#2a2a2c] px-2 py-3">High alert</div>
+              <div className="rounded-[16px] border border-white/8 bg-[#2a2a2c] px-2 py-3">Reveal sync</div>
+              <div className="rounded-[16px] border border-white/8 bg-[#2a2a2c] px-2 py-3">Cashout lane</div>
+            </div>
           </div>
         </div>
       </div>
