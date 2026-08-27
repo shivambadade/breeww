@@ -18,11 +18,14 @@ const BetPanel = ({ onPlaceBet, disabled }) => {
         <div className="flex-1 bg-gray-900 rounded-xl p-3 border border-gray-700 flex items-center justify-between">
           <button 
             onClick={() => setAmount(Math.max(10, amount - 10))}
+            aria-label="Decrease bet amount"
             className="text-gray-400 font-bold px-2"
           >
             -
           </button>
           <input 
+            aria-label="Bet amount"
+            data-testid="bet-amount-input"
             type="number" 
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
@@ -30,12 +33,14 @@ const BetPanel = ({ onPlaceBet, disabled }) => {
           />
           <button 
             onClick={() => setAmount(amount + 10)}
+            aria-label="Increase bet amount"
             className="text-gray-400 font-bold px-2"
           >
             +
           </button>
         </div>
         <button 
+          data-testid="place-bet-button"
           onClick={handleBet}
           disabled={disabled || amount > balance || amount <= 0}
           className={`flex-[1.5] py-4 rounded-xl font-black text-lg uppercase transition-all active:scale-95 ${
@@ -53,6 +58,7 @@ const BetPanel = ({ onPlaceBet, disabled }) => {
           <button
             key={val}
             onClick={() => setAmount(val)}
+            aria-label={`Quick bet ${val}`}
             className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${
               amount === val 
                 ? 'bg-casino-accent/20 border-casino-accent text-casino-accent' 

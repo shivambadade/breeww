@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from './layout/Layout';
 import Home from './pages/Home';
 import Activity from './pages/Activity';
@@ -18,7 +18,9 @@ import Plinko from './games/Plinko';
 import Poker from './games/Poker';
 import ChamberRisk from './games/ChamberRisk';
 import Roulette from './games/Roulette';
-import { normalizePath } from './lib/navigation';
+import GameGate from './components/common/GameGate';
+import { normalizePath, pageHref } from './lib/navigation';
+import { clearUserSession, getStoredUserToken, validateStoredUserSession } from './lib/auth';
 
 const withLayout = (PageComponent) => (
   <Layout>
@@ -52,21 +54,93 @@ const pageRegistry = {
   '/notifications': <Notifications />,
   '/login': <Login />,
   '/register': <Register />,
-  '/game/aviator': <Aviator />,
-  '/game/color-prediction': <ColorPrediction />,
-  '/game/mines': <Mines />,
-  '/game/spin-wheel': <SpinWheel />,
-  '/game/dice': <Dice />,
-  '/game/dragon-tiger': <DragonTiger />,
-  '/game/plinko': <Plinko />,
-  '/game/poker': <Poker />,
-  '/game/chamber-risk': <ChamberRisk />,
-  '/game/roulette': <Roulette />,
-  '/game/Roulette': <Roulette />,
+  '/game/aviator': <GameGate backendGameId="aviator"><Aviator /></GameGate>,
+  '/game/color-prediction': <GameGate backendGameId="colour"><ColorPrediction /></GameGate>,
+  '/game/mines': <GameGate backendGameId="mines"><Mines /></GameGate>,
+  '/game/spin-wheel': <GameGate backendGameId="wheel"><SpinWheel /></GameGate>,
+  '/game/dice': <GameGate backendGameId="dice"><Dice /></GameGate>,
+  '/game/dragon-tiger': <GameGate backendGameId="dragon-tiger"><DragonTiger /></GameGate>,
+  '/game/plinko': <GameGate backendGameId="plinko"><Plinko /></GameGate>,
+  '/game/poker': <GameGate backendGameId="poker"><Poker /></GameGate>,
+  '/game/chamber-risk': <GameGate backendGameId="chamber-risk"><ChamberRisk /></GameGate>,
+  '/game/roulette': <GameGate backendGameId="roulette"><Roulette /></GameGate>,
+  '/game/Roulette': <GameGate backendGameId="roulette"><Roulette /></GameGate>,
 };
 
+const PUBLIC_PATHS = new Set(['/login', '/register']);
+
+const GuardScreen = () => (
+  <div className="min-h-screen bg-[#11172f] flex items-center justify-center text-white">
+    <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold tracking-[0.12em] uppercase">
+      Loading
+    </div>
+  </div>
+);
+
 const PageRoot = () => {
-  return pageRegistry[normalizePath(window.location.pathname)] ?? <NotFound />;
+  const path = normalizePath(window.location.pathname);
+  const [isReady, setIsReady] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const applyGuard = async () => {
+      const token = getStoredUserToken();
+
+      if (!token) {
+        if (!PUBLIC_PATHS.has(path)) {
+          clearUserSession({ redirectTo: '/login' });
+          return;
+        }
+
+        if (!cancelled) {
+          setIsAuthenticated(false);
+          setIsReady(true);
+        }
+        return;
+      }
+
+      const isValid = await validateStoredUserSession();
+      if (cancelled) return;
+
+      if (!isValid) {
+        if (!PUBLIC_PATHS.has(path)) {
+          clearUserSession({ redirectTo: '/login' });
+          return;
+        }
+
+        setIsAuthenticated(false);
+        setIsReady(true);
+        return;
+      }
+
+      if (PUBLIC_PATHS.has(path)) {
+        window.location.replace(pageHref('/'));
+        return;
+      }
+
+      setIsAuthenticated(true);
+      setIsReady(true);
+    };
+
+    setIsReady(false);
+    applyGuard();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [path]);
+
+  if (!isReady) {
+    return <GuardScreen />;
+  }
+
+  if (!isAuthenticated && !PUBLIC_PATHS.has(path)) {
+    return null;
+  }
+
+  return pageRegistry[path] ?? <NotFound />;
 };
 
 export default PageRoot;

@@ -24,7 +24,7 @@ const HistoryTable = ({ gameHistory }) => {
           <tbody>
             {gameHistory.length > 0 ? (
               gameHistory.map((h, i) => (
-                <tr key={i} className="border-t border-white/5">
+                <tr key={i} data-testid="wingo-history-row" className="border-t border-white/5">
                   <td className="p-3 font-mono text-gray-400 text-[10px]">{h.period}</td>
                   <td className={`p-3 font-black text-lg ${h.color === 'Green' ? 'text-green-500' : h.color === 'Red' ? 'text-red-500' : 'text-purple-500'}`}>
                     {h.number}
@@ -46,7 +46,7 @@ const HistoryTable = ({ gameHistory }) => {
               ))
             ) : (
               <tr>
-                <td colSpan="4" className="p-8 text-center text-gray-600 italic">No history yet...</td>
+                <td data-testid="wingo-history-empty" colSpan="4" className="p-8 text-center text-gray-600 italic">No history yet...</td>
               </tr>
             )}
           </tbody>

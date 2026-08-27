@@ -1,6 +1,9 @@
-import React, { createContext, useContext, useState } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { getBalance } from '../api/walletApi';
 
 const WalletContext = createContext();
+const INITIAL_BALANCE = 0;
 
 export const useWallet = () => {
   const context = useContext(WalletContext);
@@ -11,26 +14,62 @@ export const useWallet = () => {
 };
 
 export const WalletProvider = ({ children }) => {
-  const [balance, setBalance] = useState(10000); // Initial balance ₹10,000
+  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const [isWalletLoading, setIsWalletLoading] = useState(true);
 
-  const placeBet = (amount) => {
-    if (balance >= amount) {
-      setBalance((prev) => prev - amount);
-      return true;
+  const refreshBalance = useCallback(async () => {
+    const nextBalance = await getBalance();
+    if (Number.isFinite(nextBalance)) {
+      setBalance(nextBalance);
     }
-    return false;
-  };
+    setIsWalletLoading(false);
+    return nextBalance;
+  }, []);
 
-  const addWin = (amount) => {
-    setBalance((prev) => prev + (Number(amount) || 0));
-  };
+  useEffect(() => {
+    let isMounted = true;
 
-  const deductLoss = (amount) => {
-    setBalance((prev) => prev - (Number(amount) || 0));
-  };
+    const loadBalance = async () => {
+      const nextBalance = await getBalance();
+      if (!isMounted) return;
+
+      if (Number.isFinite(nextBalance)) {
+        setBalance(nextBalance);
+      }
+      setIsWalletLoading(false);
+    };
+
+    loadBalance();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const placeBet = useCallback((amount) => {
+    const wager = Number(amount);
+    if (!Number.isFinite(wager) || wager <= 0 || balance < wager) {
+      return false;
+    }
+
+    setBalance((prev) => prev - wager);
+    return true;
+  }, [balance]);
+
+  const addWin = useCallback((amount) => {
+    const payout = Number(amount);
+    if (!Number.isFinite(payout) || payout <= 0) return;
+    setBalance((prev) => prev + payout);
+  }, []);
+
+  const deductLoss = useCallback((amount) => {
+    const loss = Number(amount);
+    if (!Number.isFinite(loss) || loss <= 0) return;
+    setBalance((prev) => Math.max(0, prev - loss));
+  }, []);
 
   return (
-    <WalletContext.Provider value={{ balance, placeBet, addWin, deductLoss }}>
+    <WalletContext.Provider value={{ balance, placeBet, addWin, deductLoss, refreshBalance, isWalletLoading }}>
       {children}
     </WalletContext.Provider>
   );

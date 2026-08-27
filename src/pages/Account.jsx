@@ -1,5 +1,6 @@
 import React from 'react';
 import { User, Wallet, Settings, LogOut, Shield, MessageCircle, Heart, Bell } from 'lucide-react';
+import { clearUserSession } from '../lib/auth';
 
 const Account = () => {
   const menuItems = [
@@ -55,7 +56,11 @@ const Account = () => {
         ))}
       </div>
 
-      <button className="w-full flex items-center justify-center gap-2 p-5 text-red-400 bg-red-950/20 hover:bg-red-950/40 rounded-2xl border border-red-900/50 font-bold transition-all shadow-lg active:scale-95">
+      <button
+        type="button"
+        onClick={() => clearUserSession({ redirectTo: '/login' })}
+        className="w-full flex items-center justify-center gap-2 p-5 text-red-400 bg-red-950/20 hover:bg-red-950/40 rounded-2xl border border-red-900/50 font-bold transition-all shadow-lg active:scale-95"
+      >
         <LogOut size={20} /> Log Out
       </button>
     </div>

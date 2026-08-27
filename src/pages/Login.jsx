@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { navigateTo } from '../lib/navigation';
 import { Eye, EyeOff, LockKeyhole, Mail, LogIn, Smartphone } from 'lucide-react';
 import AuthShell from '../components/auth/AuthShell';
-
+import { loginUser } from '../api/userApi';
 const methodOptions = [
   { id: 'phone', label: 'Phone number', icon: Smartphone, prefix: '+91' },
   { id: 'email', label: 'Email address', icon: Mail, prefix: '@' },
@@ -45,11 +46,30 @@ const AuthField = ({
 );
 
 const Login = () => {
+  const navigate = navigateTo;
   const [method, setMethod] = useState('phone');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const selectedMethod = methodOptions.find((option) => option.id === method);
+
+  const handleLogin = async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const res = await loginUser({ identifier, password });
+      if (res && res.token) {
+        navigate('/');
+      }
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AuthShell
@@ -66,7 +86,7 @@ const Login = () => {
           <button
             key={option.id}
             type="button"
-            onClick={() => setMethod(option.id)}
+            onClick={() => { setMethod(option.id); setIdentifier(''); }}
             className={`rounded-[1rem] px-4 py-3 text-sm font-semibold transition ${
               method === option.id
                 ? 'bg-[#4aa4ff] text-white shadow-[0_10px_24px_rgba(53,134,255,0.35)]'
@@ -101,11 +121,15 @@ const Login = () => {
         }
       />
 
+      {error ? <div className="mt-2 text-center text-sm font-bold text-red-500">{error}</div> : null}
+
       <button
         type="button"
-        className="auth-primary-button mt-4 w-full"
+        onClick={handleLogin}
+        disabled={loading || !identifier || !password}
+        className="auth-primary-button mt-4 w-full disabled:opacity-50"
       >
-        Login
+        {loading ? 'Logging in...' : 'Login'}
       </button>
     </AuthShell>
   );

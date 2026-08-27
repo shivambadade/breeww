@@ -24,7 +24,11 @@ const GameLayout = ({ title, children, onPlaceBet, betDisabled, isWide = false, 
               <span className="font-bold tracking-tight text-white uppercase text-sm">{title}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="bg-[#1B233D] px-3 py-1.5 rounded-full font-bold text-[#FFD700] text-xs border border-white/5 shadow-inner">
+              <div
+                aria-label="Wallet balance"
+                data-testid="game-wallet-balance"
+                className="bg-[#1B233D] px-3 py-1.5 rounded-full font-bold text-[#FFD700] text-xs border border-white/5 shadow-inner"
+              >
                 {formatINR(balance)}
               </div>
             </div>
