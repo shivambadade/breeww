@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { navigateTo } from '../lib/navigation';
 import { Eye, EyeOff, LockKeyhole, Mail, LogIn, Smartphone } from 'lucide-react';
 import AuthShell from '../components/auth/AuthShell';
-import { loginUser } from '../api/userApi';
+import { useAuth } from '../context/AuthContext';
+import { navigateTo } from '../lib/navigation';
+
 const methodOptions = [
   { id: 'phone', label: 'Phone number', icon: Smartphone, prefix: '+91' },
   { id: 'email', label: 'Email address', icon: Mail, prefix: '@' },
@@ -46,28 +47,25 @@ const AuthField = ({
 );
 
 const Login = () => {
-  const navigate = navigateTo;
+  const { login } = useAuth();
   const [method, setMethod] = useState('phone');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
   const selectedMethod = methodOptions.find((option) => option.id === method);
 
-  const handleLogin = async () => {
+  const onSubmit = async () => {
+    setError('');
+    setBusy(true);
     try {
-      setError(null);
-      setLoading(true);
-      const res = await loginUser({ identifier, password });
-      if (res && res.token) {
-        navigate('/');
-      }
+      await login({ method, identifier, password });
+      navigateTo('/');
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
 
@@ -86,7 +84,7 @@ const Login = () => {
           <button
             key={option.id}
             type="button"
-            onClick={() => { setMethod(option.id); setIdentifier(''); }}
+            onClick={() => setMethod(option.id)}
             className={`rounded-[1rem] px-4 py-3 text-sm font-semibold transition ${
               method === option.id
                 ? 'bg-[#4aa4ff] text-white shadow-[0_10px_24px_rgba(53,134,255,0.35)]'
@@ -121,15 +119,15 @@ const Login = () => {
         }
       />
 
-      {error ? <div className="mt-2 text-center text-sm font-bold text-red-500">{error}</div> : null}
+      {error ? <p className="text-sm text-red-300">{error}</p> : null}
 
       <button
         type="button"
-        onClick={handleLogin}
-        disabled={loading || !identifier || !password}
-        className="auth-primary-button mt-4 w-full disabled:opacity-50"
+        className="auth-primary-button mt-4 w-full"
+        disabled={busy}
+        onClick={onSubmit}
       >
-        {loading ? 'Logging in...' : 'Login'}
+        {busy ? 'Signing in…' : 'Login'}
       </button>
     </AuthShell>
   );

@@ -1,16 +1,57 @@
-# React + Vite
+# Breeww — Player Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Mobile-first **player** casino UI (INR): lobby, games, wallet, promotions, account.
 
-Currently, two official plugins are available:
+Uses the **player** API from `laughing-computing-machine` (same deploy as admin):
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+| Environment | `VITE_API_BASE_URL` |
+|-------------|---------------------|
+| Local (combined) | `http://localhost:3000/player/api` |
+| Local (standalone player) | `http://localhost:3001/api` |
+| Production | `https://YOUR-HOST/player/api` |
 
-## React Compiler
+| Project | Role |
+|---------|------|
+| **breeww** (this) | Player frontend |
+| `stunning-dollop` | Admin dashboard → `/api` |
+| `laughing-computing-machine` | Admin + player APIs (one deploy) |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+- Login / register (phone or email) against player API
+- Wallet balance from API
+- Roulette bets via `POST …/roulette/bet`
+- Lobby games, account, promotions UI
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Tech
+
+React 19, Vite 7, Tailwind, Framer Motion, Lucide, matter-js (Plinko), Playwright.
+
+## Setup
+
+```bash
+# Backend first
+cd path/to/laughing-computing-machine
+npm install && npm run dev
+
+# Player UI
+cd path/to/breeww
+cp .env.example .env    # VITE_API_BASE_URL=http://localhost:3000/player/api
+npm install && npm run dev
+```
+
+Demo player: **`player@breeww.com` / `Player@123`** (or phone `9999999999`)
+
+## Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Vite (5173) |
+| `npm run build` | Production build |
+| `npm run preview` | Preview |
+| `npm run lint` | ESLint |
+| `npm run test:e2e` | Playwright |
+
+## API client
+
+`src/lib/apiClient.js` + `src/api/*` — auth token in `localStorage` (`player_token`).

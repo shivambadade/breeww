@@ -9,11 +9,13 @@ const rootDir = fileURLToPath(new URL('.', import.meta.url))
 export default defineConfig({
   plugins: [react()],
   server: {
+    port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/player/api'),
       },
     },
   },

@@ -1,21 +1,19 @@
-const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+import { apiClient } from '../lib/apiClient';
 
 export const getBalance = async () => {
-  const token = localStorage.getItem('userToken');
-  if (!token) return null;
-  
-  try {
-    const res = await fetch(`${baseUrl}/auth/profile`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json();
-    if (!data.success) return null;
-    return parseFloat(data.data.user.balance) || 0;
-  } catch {
-    return null;
-  }
+  const res = await apiClient('/wallet/balance');
+  return Number(res.data?.balance ?? 0);
 };
 
-export const updateBalance = async (amount) => {
-  return { success: true, newBalance: amount };
+export const updateBalance = async (amount, type = 'admin_adjust', note) => {
+  const res = await apiClient('/wallet/adjust', {
+    method: 'POST',
+    body: { amount, type, note },
+  });
+  return { success: true, newBalance: Number(res.data?.balance ?? 0) };
+};
+
+export const getLedger = async () => {
+  const res = await apiClient('/wallet/ledger');
+  return res.data || [];
 };
