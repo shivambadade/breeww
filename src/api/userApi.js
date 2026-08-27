@@ -1,7 +1,16 @@
+import { apiClient } from '../lib/apiClient';
+
 export const getUserProfile = async () => {
-  return { id: '123', name: 'Breeww User' };
+  const res = await apiClient('/user/profile');
+  return res.data;
 };
 
 export const updateSettings = async (settings) => {
-  return { success: true };
+  const res = await apiClient('/user/settings', { method: 'PATCH', body: settings });
+  return res.data;
+};
+
+export const getNotifications = async () => {
+  const res = await apiClient('/user/notifications');
+  return res.data || [];
 };

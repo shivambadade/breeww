@@ -9,7 +9,8 @@ import {
   UserRoundPlus,
 } from 'lucide-react';
 import AuthShell from '../components/auth/AuthShell';
-import { pageHref } from '../lib/navigation';
+import { pageHref, navigateTo } from '../lib/navigation';
+import { useAuth } from '../context/AuthContext';
 
 const methodOptions = [
   { id: 'phone', label: 'Phone number', icon: Smartphone, prefix: '+91' },
@@ -60,14 +61,39 @@ const AuthField = ({
 };
 
 const Register = () => {
+  const { register } = useAuth();
   const [method, setMethod] = useState('phone');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [inviteCode, setInviteCode] = useState('34424245421');
+  const [inviteCode, setInviteCode] = useState('');
+  const [agreed, setAgreed] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
   const selectedMethod = methodOptions.find((option) => option.id === method);
+
+  const onSubmit = async () => {
+    setError('');
+    if (!agreed) {
+      setError('Please accept the privacy agreement');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    setBusy(true);
+    try {
+      await register({ method, identifier, password, inviteCode });
+      navigateTo('/');
+    } catch (err) {
+      setError(err.message || 'Registration failed');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <AuthShell
@@ -146,18 +172,27 @@ const Register = () => {
       />
 
       <label className="mt-1 flex items-center gap-3 text-sm text-blue-50/80">
-        <input type="checkbox" className="auth-checkbox" />
+        <input
+          type="checkbox"
+          className="auth-checkbox"
+          checked={agreed}
+          onChange={(e) => setAgreed(e.target.checked)}
+        />
         <span>{agreementLabel}</span>
         <a href={pageHref('/')} className="text-red-400 transition hover:text-red-300">
           [Privacy Agreement]
         </a>
       </label>
 
+      {error ? <p className="text-sm text-red-300">{error}</p> : null}
+
       <button
         type="button"
         className="auth-primary-button mt-4 w-full"
+        disabled={busy}
+        onClick={onSubmit}
       >
-        Register
+        {busy ? 'Creating account…' : 'Register'}
       </button>
     </AuthShell>
   );

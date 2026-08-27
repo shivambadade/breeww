@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, LockKeyhole, Mail, LogIn, Smartphone } from 'lucide-react';
 import AuthShell from '../components/auth/AuthShell';
+import { useAuth } from '../context/AuthContext';
+import { navigateTo } from '../lib/navigation';
 
 const methodOptions = [
   { id: 'phone', label: 'Phone number', icon: Smartphone, prefix: '+91' },
@@ -45,11 +47,27 @@ const AuthField = ({
 );
 
 const Login = () => {
+  const { login } = useAuth();
   const [method, setMethod] = useState('phone');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
   const selectedMethod = methodOptions.find((option) => option.id === method);
+
+  const onSubmit = async () => {
+    setError('');
+    setBusy(true);
+    try {
+      await login({ method, identifier, password });
+      navigateTo('/');
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <AuthShell
@@ -101,11 +119,15 @@ const Login = () => {
         }
       />
 
+      {error ? <p className="text-sm text-red-300">{error}</p> : null}
+
       <button
         type="button"
         className="auth-primary-button mt-4 w-full"
+        disabled={busy}
+        onClick={onSubmit}
       >
-        Login
+        {busy ? 'Signing in…' : 'Login'}
       </button>
     </AuthShell>
   );

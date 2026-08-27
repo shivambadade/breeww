@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { AlertCircle, BarChart3, CheckCircle2, LoaderCircle, Volume2, VolumeX } from 'lucide-react';
 import GameLayout from '../GameLayout';
+import { submitRouletteBet } from '../../api/gameApi';
 import { useWallet } from '../../hooks/useWallet';
 import { formatINR } from '../../utils/formatCurrency';
 import RouletteBoard from './RouletteBoard';
@@ -12,7 +13,6 @@ import BetHistory from './BetHistory';
 
 const chipValues = [10, 50, 100, 500];
 const chipStackOrder = [500, 100, 50, 10];
-const rouletteEndpoint = import.meta.env.VITE_ROULETTE_BET_ENDPOINT || '/api/roulette/bet';
 
 const createTimestampLabel = (date = new Date()) =>
   date.toLocaleTimeString('en-IN', {
@@ -65,27 +65,10 @@ const buildChipStack = (amount) => {
   return chips;
 };
 
-const submitRouletteBets = async ({ bets, signal }) => {
-  const response = await fetch(rouletteEndpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-    body: JSON.stringify({ bets }),
-    signal,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || 'Failed to submit roulette bet.');
-  }
-
-  return response.json();
-};
+const submitRouletteBets = async ({ bets, signal }) => submitRouletteBet(bets, { signal });
 
 const Roulette = () => {
-  const { balance } = useWallet();
+  const { balance, refreshBalance, setBalance } = useWallet();
   const [selectedChip, setSelectedChip] = useState(chipValues[0]);
   const [bets, setBets] = useState([]);
   const [history, setHistory] = useState([]);
@@ -251,6 +234,11 @@ const Roulette = () => {
       setBets([]);
       setPlacementHistory([]);
       setRequestState('success');
+      if (response?.balance != null) {
+        setBalance(Number(response.balance));
+      } else {
+        await refreshBalance();
+      }
       setStatusMessage(
         Number.isNaN(result.winningNumber)
           ? 'Backend accepted the round result.'
@@ -263,7 +251,7 @@ const Roulette = () => {
       setErrorMessage(error.message || 'Failed to submit bets.');
       setStatusMessage('Unable to complete the spin request.');
     }
-  }, [balance, bets, canSpin, isSpinning, totalBet]);
+  }, [balance, bets, canSpin, isSpinning, totalBet, refreshBalance, setBalance]);
 
   const statusTone =
     requestState === 'error'
