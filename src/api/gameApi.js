@@ -1,5 +1,24 @@
 import { apiClient, apiBaseUrl } from '../lib/apiClient';
 
+export const fetchGamesCatalog = async () => {
+  try {
+    const res = await apiClient('/games/catalog');
+    return res.data || res || [];
+  } catch {
+    return [];
+  }
+};
+
+export const fetchCurrentRound = async (gameId) => {
+  try {
+    const res = await apiClient(`/games/${encodeURIComponent(gameId)}/round/current`);
+    return res.data || null;
+  } catch (err) {
+    if (err.message && err.message.includes('404')) return null;
+    throw err;
+  }
+};
+
 export const fetchGameHistory = async (gameId) => {
   const q = gameId ? `?gameId=${encodeURIComponent(gameId)}` : '';
   const res = await apiClient(`/games/history${q}`);
